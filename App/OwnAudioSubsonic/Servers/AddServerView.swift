@@ -1,13 +1,10 @@
 import SwiftUI
 
-/// Address, username, password; checked against the server before anything is saved. Used as
-/// the first screen and from Settings.
+/// Address, username, password; checked against the server before anything is saved. Used from
+/// Settings; the first run has `OnboardingView`.
 struct AddServerView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-
-    /// The first-run screen has nothing to cancel back to.
-    var isOnboarding = false
 
     @State private var address = ""
     @State private var username = ""
@@ -25,22 +22,6 @@ struct AddServerView: View {
 
     var body: some View {
         Form {
-            if isOnboarding {
-                Section {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                        Image(systemName: "music.note.house")
-                            .font(.system(size: 44))
-                            .foregroundStyle(.tint)
-                        Text("Connect your music server")
-                            .font(.title2.bold())
-                        Text("Navidrome, Gonic, Airsonic, LMS, Ampache or any other Subsonic-compatible server.")
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, Theme.Spacing.sm)
-                }
-                .listRowBackground(Color.clear)
-            }
-
             Section {
                 TextField("Address", text: $address, prompt: Text("music.example.com or 192.168.1.10:4533"))
                     .textContentType(.URL)
@@ -101,13 +82,11 @@ struct AddServerView: View {
                 .accessibilityIdentifier("addServer.connect")
             }
         }
-        .navigationTitle(isOnboarding ? "" : "Add Server")
+        .navigationTitle("Add Server")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !isOnboarding {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
             }
         }
         .onAppear { if address.isEmpty { focus = .address } }
@@ -121,7 +100,7 @@ struct AddServerView: View {
             do {
                 try await model.addServer(address: address, username: username, password: password, name: name)
                 Haptics.impact(.medium)
-                if !isOnboarding { dismiss() }
+                dismiss()
             } catch {
                 errorMessage = error.localizedDescription
             }

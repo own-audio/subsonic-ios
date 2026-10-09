@@ -50,7 +50,7 @@ the trade-off chosen for simpler maintenance.
   - [x] Czech localization (glossary terms, plurals); a UI test walks the screens in Czech.
   - [x] Large text: fixes from a UI test at the largest accessibility size.
   - [x] README.
-  - [x] App icon and App Store name ("own.audio for Subsonic", home screen "own subsonic").
+  - [x] App icon and App Store name ("own.audio for Subsonic", home screen "own.subsonic").
   - [x] App Store listing text (English, Czech), screenshot script, privacy manifest.
   - [x] Apple Developer Program active (2026-10-09); App ID registered; App Store Connect record
     "own.audio for Subsonic"; first build (0.1.0) uploaded to TestFlight.

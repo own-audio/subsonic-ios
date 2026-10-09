@@ -35,4 +35,8 @@
   
     </g>
   </g>
-  </svg>
+  <g fill="none" stroke="#B35F00" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46.225 80.25 L41 85 L46.225 89.75"/>
+    <path d="M53.775 80.25 L59 85 L53.775 89.75"/>
+    <path d="M52.16 79.75 L47.84 90.25"/>
+  </g></svg>

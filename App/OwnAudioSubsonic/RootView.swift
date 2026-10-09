@@ -11,7 +11,7 @@ struct RootView: View {
             if !model.hasLoaded {
                 ProgressView()
             } else if model.servers.isEmpty {
-                NavigationStack { AddServerView(isOnboarding: true) }
+                OnboardingView()
             } else {
                 tabs
             }

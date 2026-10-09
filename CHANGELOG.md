@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- New welcome screen: the app icon, name and what it works with, one card for the server
+  fields, a large Connect button and three short notes (the password stays on the phone,
+  own.audio's Subsonic key, http as the default). The add-server form in Settings stays a
+  plain form.
+- Icon: `</>` in the ring's bottom gap marks the app as open source. Home-screen name
+  "own.subsonic".
+
 - Organized like own.audio's music app: four tabs, Home, Library, Playlists and Search (its own
   capsule at the trailing edge). Home has Shuffle All (a random hundred from the server), then
   Recently Played, Recently Added and Playlists, and a gear that opens Settings as a sheet;
@@ -114,7 +121,7 @@ All notable changes to this project are documented here. The format follows
   fit. UI test: the main screens at the largest size.
 - README for the public repository.
 - App icon: the own.audio construction in orange, light with a dark-mode variant (source in
-  `Design/`). Home-screen name "own subsonic", like own music, own book and own podcast; the
+  `Design/`). Home-screen name "own.subsonic"; the
   store name is "own.audio for Subsonic".
 - App Store listing in English and Czech (`AppStore/`), and `scripts/app-store-screenshots.sh`,
   which takes the screenshots on the required iPhone 6.9" and iPad 13" sizes in both languages

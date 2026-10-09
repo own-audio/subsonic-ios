@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-      "shouldTranslate" : false
-    },
     "%@ · %@" : {
       "shouldTranslate" : false
     },
@@ -435,6 +432,7 @@
       }
     },
     "Connect your music server" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -777,6 +775,16 @@
         }
       }
     },
+    "Free and open source · MPL-2.0" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdarma a s otevřeným kódem · MPL-2.0"
+          }
+        }
+      }
+    },
     "Genres" : {
       "localizations" : {
         "cs" : {
@@ -920,6 +928,16 @@
         }
       }
     },
+    "music.example.com" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "music.example.com"
+          }
+        }
+      }
+    },
     "music.example.com or 192.168.1.10:4533" : {
       "localizations" : {
         "cs" : {
@@ -951,6 +969,7 @@
       }
     },
     "Navidrome, Gonic, Airsonic, LMS, Ampache or any other Subsonic-compatible server." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1236,6 +1255,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otevře přehrávač"
+          }
+        }
+      }
+    },
+    "own.audio: sign in with your email and the Subsonic key from the web app's settings." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "own.audio: přihlaste se e-mailem a klíčem Subsonic z nastavení webové aplikace."
           }
         }
       }
@@ -1616,6 +1645,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server"
+          }
+        }
+      }
+    },
+    "Server address" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresa serveru"
           }
         }
       }
@@ -2102,12 +2141,42 @@
         }
       }
     },
+    "Without http:// or https://, http is used, which suits a server at home." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez http:// nebo https:// se použije http, což se hodí pro server doma."
+          }
+        }
+      }
+    },
     "Without http:// or https://, http is used. The password stays in this phone's Keychain and is never sent to the server, only a one-time token made from it.\n\nown.audio: sign in with your email and the Subsonic key from the web app's settings, not your account password." : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bez http:// nebo https:// se použije http. Heslo zůstává v klíčence tohoto telefonu a na server se nikdy neposílá, jen jednorázový token z něj vytvořený.\n\nown.audio: přihlaste se e-mailem a klíčem Subsonic z nastavení webové aplikace, ne heslem k účtu."
+          }
+        }
+      }
+    },
+    "Your music, from your own server." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaše hudba z vašeho vlastního serveru."
+          }
+        }
+      }
+    },
+    "Your password stays in this iPhone's Keychain. Only a one-time token made from it is sent." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heslo zůstává v klíčence tohoto iPhonu. Odesílá se jen jednorázový token z něj vytvořený."
           }
         }
       }
