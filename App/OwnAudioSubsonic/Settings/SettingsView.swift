@@ -1,3 +1,4 @@
+import PlayerEngine
 import SwiftUI
 
 struct SettingsView: View {
@@ -8,6 +9,12 @@ struct SettingsView: View {
         let short = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
         return "\(short) (\(build))"
+    }
+
+    private var equalizerSummary: String {
+        guard model.equalizer.enabled else { return String(localized: "Off") }
+        let preset = EqPreset.all.first { $0.name == model.equalizer.presetName }
+        return preset?.title ?? String(localized: "Custom")
     }
 
     var body: some View {
@@ -30,6 +37,16 @@ struct SettingsView: View {
             }
 
             CrossfadeSettings(settings: model.playbackSettings)
+
+            ReplayGainSettings(settings: model.playbackSettings)
+
+            Section {
+                NavigationLink {
+                    EqualizerView(store: model.equalizer)
+                } label: {
+                    LabeledContent("Equalizer", value: equalizerSummary)
+                }
+            }
 
             Section {
                 Toggle("Report Plays to the Server", isOn: Binding(

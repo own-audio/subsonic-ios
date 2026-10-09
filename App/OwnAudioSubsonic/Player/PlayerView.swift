@@ -5,7 +5,7 @@ import SwiftUI
 /// transport, and a row of tools (shuffle, repeat, crossfade, sleep timer, queue, AirPlay).
 struct PlayerView: View {
     private enum ActiveSheet: Identifiable {
-        case queue, sleepTimer, crossfade
+        case queue, sleepTimer, crossfade, lyrics, equalizer
         var id: Self { self }
     }
 
@@ -43,6 +43,8 @@ struct PlayerView: View {
             case .queue: QueueSheet()
             case .sleepTimer: SleepTimerSheet(timer: engine.sleepTimer)
             case .crossfade: CrossfadeSheet(settings: model.playbackSettings)
+            case .lyrics: LyricsView()
+            case .equalizer: EqualizerView(store: model.equalizer)
             }
         }
         .onChange(of: engine.currentTrack == nil) { _, isEmpty in
@@ -164,7 +166,7 @@ struct PlayerView: View {
                 .foregroundStyle(.white.opacity(0.75))
                 .lineLimit(1)
                 .frame(maxWidth: PlayerLayout.contentWidth)
-            if let badge = FormatBadge.text(for: engine.currentFormat) {
+            if let badge = FormatBadge.text(for: engine.currentFormat, gainDb: engine.appliedGainDb) {
                 Text(badge)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.6))
@@ -276,6 +278,9 @@ struct PlayerView: View {
         GeometryReader { geometry in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Theme.Spacing.md) {
+                    tool("quote.bubble", "Lyrics", isEnabled: engine.currentTrack != nil) {
+                        activeSheet = .lyrics
+                    }
                     tool(
                         engine.isShuffled ? "shuffle.circle.fill" : "shuffle", "Shuffle",
                         isActive: engine.isShuffled
@@ -290,6 +295,9 @@ struct PlayerView: View {
                     .accessibilityValue(repeatValue)
                     tool("waveform.path.ecg", "Crossfade", isActive: model.playbackSettings.crossfadeEnabled) {
                         activeSheet = .crossfade
+                    }
+                    tool("slider.horizontal.3", "EQ", isActive: model.equalizer.enabled) {
+                        activeSheet = .equalizer
                     }
                     tool(
                         engine.sleepTimer.isActive ? "moon.zzz.fill" : "moon.zzz", "Sleep",

@@ -40,6 +40,13 @@ struct AirPlayRouteButton: UIViewRepresentable {
 /// "FLAC · 44.1 kHz · 16-bit" for lossless with a known bit depth, "MP3 320" for lossy with a
 /// known bitrate, otherwise just the codec. Makes lossless visible rather than claimed.
 enum FormatBadge {
+    /// Adds the ReplayGain applied, when there is one, so normalization is visible too.
+    static func text(for info: AudioStreamDecoder.FormatInfo?, gainDb: Double) -> String? {
+        guard let format = text(for: info) else { return nil }
+        guard abs(gainDb) >= 0.05 else { return format }
+        return "\(format) · " + String(format: "%+.1f dB", gainDb)
+    }
+
     static func text(for info: AudioStreamDecoder.FormatInfo?) -> String? {
         guard let info else { return nil }
         let codec = codecName(for: info.formatID)

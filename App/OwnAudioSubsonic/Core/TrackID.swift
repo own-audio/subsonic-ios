@@ -25,7 +25,13 @@ extension Song {
             id: TrackID.make(serverId: serverId, itemId: id), title: title, artist: artist, album: album,
             durationSecs: duration,
             // Some servers give songs no cover id of their own; the album's is the right fallback.
-            artworkId: (coverArt ?? albumId).map { TrackID.make(serverId: serverId, itemId: $0) }
+            artworkId: (coverArt ?? albumId).map { TrackID.make(serverId: serverId, itemId: $0) },
+            replayGain: replayGain.flatMap { gain in
+                gain.isEmpty ? nil : TrackGain(
+                    trackGainDb: gain.trackGain, albumGainDb: gain.albumGain,
+                    trackPeak: gain.trackPeak, albumPeak: gain.albumPeak
+                )
+            }
         )
     }
 }

@@ -50,6 +50,8 @@ final class AppModel {
     private let registry: ClientRegistry
     private let fileCache: TrackFileCache
     private var clients: [UUID: SubsonicClient] = [:]
+    /// OpenSubsonic extensions per server, asked for once.
+    private var extensions: [UUID: Set<String>] = [:]
 
     private static let activeServerKey = "activeServerId"
     private static let scrobblingKey = "scrobblingEnabled"
@@ -340,6 +342,15 @@ final class AppModel {
         activeServerId.map { TrackID.make(serverId: $0, itemId: itemId) }
     }
 
+    // MARK: - Lyrics
+
+    func lyrics(for track: Track) async throws -> [Lyrics] {
+        guard let (client, songId) = await resolve(track.id), let serverId = TrackID.parse(track.id)?.serverId else { return [] }
+        if extensions[serverId] == nil { extensions[serverId] = await client.openSubsonicExtensions() }
+        let song = Song(id: songId, title: track.title, album: track.album, artist: track.artist)
+        return try await client.lyrics(for: song, useSongLyricsExtension: extensions[serverId]?.contains("songLyrics") == true)
+    }
+
     // MARK: - Downloads
 
     func download(album: Album, songs: [Song]) {
@@ -390,6 +401,7 @@ final class AppModel {
             ))
         })
         await registry.set(clients)
+        extensions = [:]
     }
 }
 

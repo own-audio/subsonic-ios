@@ -146,6 +146,26 @@ struct CrossfadeSheet: View {
     }
 }
 
+struct ReplayGainSettings: View {
+    let settings: PlaybackSettingsStore
+
+    var body: some View {
+        Section {
+            Picker("Volume Leveling", selection: Binding(
+                get: { settings.replayGainMode },
+                set: { settings.setReplayGainMode($0) }
+            )) {
+                Text("Off").tag(ReplayGainMode.off)
+                Text("Same for Every Song").tag(ReplayGainMode.track)
+                Text("Same for Every Album").tag(ReplayGainMode.album)
+            }
+            .accessibilityIdentifier("settings.replayGain")
+        } footer: {
+            Text("Uses the ReplayGain values in your files, so a quiet song and a loud one play at a similar volume. Per album keeps an album's own quiet and loud moments. Songs without the values play unchanged.")
+        }
+    }
+}
+
 struct CrossfadeSettings: View {
     let settings: PlaybackSettingsStore
 
