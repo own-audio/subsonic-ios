@@ -190,6 +190,21 @@ public struct Playlist: Codable, Identifiable, Sendable, Hashable {
     }
 }
 
+public struct Genre: Codable, Sendable, Hashable, Identifiable {
+    /// The genre's name; Subsonic calls it `value`.
+    public let value: String
+    public let albumCount: Int?
+    public let songCount: Int?
+
+    public var id: String { value }
+
+    public init(value: String, albumCount: Int? = nil, songCount: Int? = nil) {
+        self.value = value
+        self.albumCount = albumCount
+        self.songCount = songCount
+    }
+}
+
 public struct SearchResult: Sendable {
     public let artists: [Artist]
     public let albums: [Album]
@@ -340,4 +355,14 @@ struct ClassicLyricsPayload: Decodable {
         let value: String?
     }
     let lyrics: Classic?
+}
+
+struct GenresPayload: Decodable {
+    struct Genres: Decodable { let genre: [Genre]? }
+    let genres: Genres
+}
+
+struct RandomSongsPayload: Decodable {
+    struct Songs: Decodable { let song: [Song]? }
+    let randomSongs: Songs
 }

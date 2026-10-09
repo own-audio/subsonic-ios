@@ -293,6 +293,49 @@ struct SubsonicClientTests {
         #expect(await client(classic).openSubsonicExtensions().isEmpty)
     }
 
+    // MARK: - Genres, all songs, random
+
+    @Test("genres decode and sort by name")
+    func genres() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""genres":{"genre":[{"value":"Rock","albumCount":3,"songCount":30},{"value":"ambient","albumCount":1,"songCount":4}]}"#))
+        }
+        let genres = try await client(mock).genres()
+        #expect(genres.map(\.value) == ["ambient", "Rock"])
+        #expect(genres.last?.songCount == 30)
+    }
+
+    @Test("albums by genre send type byGenre and the genre")
+    func albumsByGenre() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in .init(statusCode: 200, body: Self.envelope(#""albumList2":{}"#)) }
+        _ = try await client(mock).albums(genre: "Rock & Roll")
+        let query = await mock.firstQuery()
+        #expect(query.first { $0.name == "type" }?.value == "byGenre")
+        #expect(query.first { $0.name == "genre" }?.value == "Rock & Roll")
+    }
+
+    @Test("all songs is an empty search3 asking for songs only, paged")
+    func allSongs() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""searchResult3":{"song":[{"id":"1","title":"a"}]}"#))
+        }
+        let songs = try await client(mock).songs(size: 50, offset: 100)
+        #expect(songs.count == 1)
+        let query = await mock.firstQuery()
+        #expect(query.first { $0.name == "query" }?.value == "")
+        #expect(query.first { $0.name == "songOffset" }?.value == "100")
+        #expect(query.first { $0.name == "albumCount" }?.value == "0")
+    }
+
+    @Test("random songs decode")
+    func randomSongs() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""randomSongs":{"song":[{"id":"1","title":"a"},{"id":"2","title":"b"}]}"#))
+        }
+        #expect(try await client(mock).randomSongs(size: 2).count == 2)
+        #expect(await mock.firstQuery().first { $0.name == "size" }?.value == "2")
+    }
+
     // MARK: - Lyrics and ReplayGain
 
     @Test("structured lyrics decode with their timing")

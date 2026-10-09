@@ -77,6 +77,23 @@ struct LiveServerTests {
         #expect(looksLikeAudio, "not a known audio container: \(magic.prefix(4))")
     }
 
+    @Test("genres, a genre's albums, a page of all songs, and random songs")
+    func browsingExtrasLive() async throws {
+        let api = try makeClient()
+        let genres = try await api.genres()
+        let genre = try #require(genres.first { ($0.albumCount ?? 0) > 0 })
+        #expect(!(try await api.albums(genre: genre.value, size: 5)).isEmpty)
+        let page = try await api.songs(size: 20)
+        #expect(!page.isEmpty)
+        let next = try await api.songs(size: 20, offset: 20)
+        // own.audio's server ignores `songOffset` (it reads only `songCount`), so every page is
+        // the first page; the app stops paging when a page brings nothing new.
+        withKnownIssue("own.audio ignores songOffset in search3", isIntermittent: true) {
+            #expect(Set(page.map(\.id)).isDisjoint(with: next.map(\.id)), "pages shouldn't repeat songs")
+        }
+        #expect(!(try await api.randomSongs(size: 10)).isEmpty)
+    }
+
     @Test("the server lists its OpenSubsonic extensions")
     func extensionsLive() async throws {
         // Informational: a classic server has none, Navidrome has several.

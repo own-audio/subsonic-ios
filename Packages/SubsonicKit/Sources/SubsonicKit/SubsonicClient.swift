@@ -125,6 +125,41 @@ public struct SubsonicClient: Sendable {
         return SearchResult(artists: result.artist ?? [], albums: result.album ?? [], songs: result.song ?? [])
     }
 
+    public func genres() async throws -> [Genre] {
+        let payload: GenresPayload = try await get("getGenres")
+        return (payload.genres.genre ?? []).sorted { $0.value.localizedCaseInsensitiveCompare($1.value) == .orderedAscending }
+    }
+
+    public func albums(genre: String, size: Int = 60, offset: Int = 0) async throws -> [Album] {
+        let payload: AlbumListPayload = try await get("getAlbumList2", query: [
+            URLQueryItem(name: "type", value: "byGenre"),
+            URLQueryItem(name: "genre", value: genre),
+            URLQueryItem(name: "size", value: String(size)),
+            URLQueryItem(name: "offset", value: String(offset)),
+        ])
+        return payload.albumList2.album ?? []
+    }
+
+    /// Every song, a page at a time. Subsonic has no "all songs" call; an empty `search3`
+    /// query is the OpenSubsonic way, and Navidrome and own.audio both answer it.
+    public func songs(size: Int = 100, offset: Int = 0) async throws -> [Song] {
+        let payload: SearchPayload = try await get("search3", query: [
+            URLQueryItem(name: "query", value: ""),
+            URLQueryItem(name: "songCount", value: String(size)),
+            URLQueryItem(name: "songOffset", value: String(offset)),
+            URLQueryItem(name: "artistCount", value: "0"),
+            URLQueryItem(name: "albumCount", value: "0"),
+        ])
+        return payload.searchResult3.song ?? []
+    }
+
+    public func randomSongs(size: Int = 100, genre: String? = nil) async throws -> [Song] {
+        var query = [URLQueryItem(name: "size", value: String(size))]
+        if let genre { query.append(URLQueryItem(name: "genre", value: genre)) }
+        let payload: RandomSongsPayload = try await get("getRandomSongs", query: query)
+        return payload.randomSongs.song ?? []
+    }
+
     // MARK: - Playlists
 
     public func playlists() async throws -> [Playlist] {
