@@ -8,6 +8,7 @@ public final class PlaybackSettingsStore {
     private enum Keys {
         static let crossfadeEnabled = "player.crossfadeEnabled"
         static let fadeDurationSecs = "player.fadeDurationSecs"
+        static let replayGainMode = "player.replayGainMode"
     }
 
     /// Mutually exclusive with strict gapless playback — see `PlaybackEngine`'s own doc
@@ -19,6 +20,12 @@ public final class PlaybackSettingsStore {
     /// are ordinary songs, not multi-minute DJ mixes that could justify much longer.
     public private(set) var fadeDurationSecs: Double
 
+    /// On by default: a shuffled library jumping in loudness is the more common complaint.
+    public private(set) var replayGainMode: ReplayGainMode
+
+    /// The engine registers here to re-apply the current track's gain.
+    public var onReplayGainModeChanged: (() -> Void)?
+
     private let defaults: UserDefaults
 
     public init(defaults: UserDefaults = .standard) {
@@ -28,6 +35,13 @@ public final class PlaybackSettingsStore {
             : false
         let storedDuration = defaults.object(forKey: Keys.fadeDurationSecs) as? Double
         fadeDurationSecs = (storedDuration ?? 4).clamped(to: 1...12)
+        replayGainMode = defaults.string(forKey: Keys.replayGainMode).flatMap(ReplayGainMode.init) ?? .track
+    }
+
+    public func setReplayGainMode(_ mode: ReplayGainMode) {
+        replayGainMode = mode
+        defaults.set(mode.rawValue, forKey: Keys.replayGainMode)
+        onReplayGainModeChanged?()
     }
 
     public func setCrossfadeEnabled(_ enabled: Bool) {

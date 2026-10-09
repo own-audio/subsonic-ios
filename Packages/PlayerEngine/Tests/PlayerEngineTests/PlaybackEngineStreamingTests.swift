@@ -22,6 +22,7 @@ struct PlaybackEngineStreamingTests {
     private struct Harness {
         let engine: PlaybackEngine
         let streamRequestLog: MockURLProtocol.StubbedSession
+        let settings: PlaybackSettingsStore
     }
 
     /// `failingTrackIds` answer 404.
@@ -39,14 +40,17 @@ struct PlaybackEngineStreamingTests {
         let fileCache = TrackFileCache(
             remoteURL: { Self.streamURL($0) }, session: mock.urlSession, cacheDirectory: cacheDirectory
         )
+        let defaults = UserDefaults(suiteName: "test.engine.settings.\(suffix)")!
+        defaults.removePersistentDomain(forName: "test.engine.settings.\(suffix)")
+        let settings = PlaybackSettingsStore(defaults: defaults)
         let engine = PlaybackEngine(
             fileCache: fileCache,
             nowPlayingController: NowPlayingController(),
-            settingsStore: PlaybackSettingsStore(defaults: UserDefaults(suiteName: "test.engine.settings.\(suffix)")!),
+            settingsStore: settings,
             equalizerStore: EqualizerStore(defaults: UserDefaults(suiteName: "test.engine.eq.\(suffix)")!),
             resumeStore: InMemoryResumeStore()
         )
-        return Harness(engine: engine, streamRequestLog: mock)
+        return Harness(engine: engine, streamRequestLog: mock, settings: settings)
     }
 
     private func makeTrack(id: String = "track-1", durationSecs: Int = 3) -> Track {
@@ -189,6 +193,33 @@ struct PlaybackEngineStreamingTests {
         #expect(started == ["first", "second"])
         #expect(completed == ["first", "second"])
         #expect(harness.engine.currentTrack == nil)
+    }
+
+    /// The second track is chained gaplessly onto the same node, so its gain has to switch at
+    /// the boundary rather than when it was scheduled.
+    @Test("each track gets its own ReplayGain, including a chained one, and a mode change applies at once")
+    func replayGainPerTrack() async throws {
+        let harness = try await makeHarness(suffix: "gain", audioData: try fixtureData("test-tone.mp3"))
+        let loud = Track(
+            id: "loud", title: "Loud", durationSecs: 3,
+            replayGain: TrackGain(trackGainDb: -6.5, albumGainDb: -5, trackPeak: 0.9, albumPeak: 0.95)
+        )
+        let quiet = Track(
+            id: "quiet", title: "Quiet", durationSecs: 3,
+            replayGain: TrackGain(trackGainDb: 3.2, albumGainDb: -5, trackPeak: 0.8, albumPeak: 0.95)
+        )
+        await harness.engine.play(tracks: [loud, quiet])
+        try await waitUntil(timeout: 5) { harness.engine.isPlaying }
+        #expect(harness.engine.appliedGainDb == -6.5)
+
+        try await waitUntil(timeout: 10) { harness.engine.currentTrack?.id == "quiet" }
+        #expect(abs(harness.engine.appliedGainDb - (-20 * log10(0.8))) < 0.0001)
+
+        harness.settings.setReplayGainMode(.album)
+        #expect(harness.engine.appliedGainDb == -5)
+        harness.settings.setReplayGainMode(.off)
+        #expect(harness.engine.appliedGainDb == 0)
+        harness.engine.stop()
     }
 
     /// Polls `condition` instead of a single fixed sleep — real network + real decode timing on

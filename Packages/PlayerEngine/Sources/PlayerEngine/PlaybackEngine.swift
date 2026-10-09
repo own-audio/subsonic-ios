@@ -130,6 +130,13 @@ public final class PlaybackEngine {
     private let engine = AVAudioEngine()
     private let playerA = AVAudioPlayerNode()
     private let playerB = AVAudioPlayerNode()
+    /// One gain stage per player node, for ReplayGain. `AVAudioUnitEQ`'s global gain reaches
+    /// +24 dB, where a node's volume stops at 1, so quiet tracks can be raised as well.
+    private let gainA = AVAudioUnitEQ(numberOfBands: 0)
+    private let gainB = AVAudioUnitEQ(numberOfBands: 0)
+
+    /// The ReplayGain applied to the current track, in dB; 0 when off or untagged.
+    public private(set) var appliedGainDb: Double = 0
     private let mixer = AVAudioMixerNode()
     private let eqNode: AVAudioUnitEQ
     private let spectrumAnalyzer = SpectrumAnalyzer()
@@ -255,6 +262,7 @@ public final class PlaybackEngine {
         buildGraph()
         wireEqualizer(equalizerStore)
         sleepTimer.onExpire = { [weak self] in self?.pause() }
+        settingsStore.onReplayGainModeChanged = { [weak self] in self?.reapplyGain() }
         observeEngineConfigurationChanges()
         #if os(iOS) || os(tvOS)
         observeAudioSessionNotifications()
@@ -352,11 +360,15 @@ public final class PlaybackEngine {
     private func buildGraph() {
         engine.attach(playerA)
         engine.attach(playerB)
+        engine.attach(gainA)
+        engine.attach(gainB)
         engine.attach(mixer)
         engine.attach(eqNode)
 
-        engine.connect(playerA, to: mixer, format: nil)
-        engine.connect(playerB, to: mixer, format: nil)
+        engine.connect(playerA, to: gainA, format: nil)
+        engine.connect(playerB, to: gainB, format: nil)
+        engine.connect(gainA, to: mixer, format: nil)
+        engine.connect(gainB, to: mixer, format: nil)
         engine.connect(mixer, to: eqNode, format: nil)
         engine.connect(eqNode, to: engine.mainMixerNode, format: nil)
     }
@@ -635,6 +647,19 @@ public final class PlaybackEngine {
         if !wasPlaying { pauseAudioOnly() }
     }
 
+    /// Sets `node`'s gain stage for `track` under the current ReplayGain mode.
+    private func applyGain(for track: Track, on node: AVAudioPlayerNode) {
+        let db = ReplayGainCalculator.gainDb(for: track.replayGain, mode: settingsStore.replayGainMode)
+        (node === playerA ? gainA : gainB).globalGain = Float(db)
+        if node === activeNode || isCrossfading { appliedGainDb = db }
+    }
+
+    /// For a change of ReplayGain mode while playing.
+    private func reapplyGain() {
+        guard let track = currentTrack else { return }
+        applyGain(for: track, on: activeNode)
+    }
+
     private func applyVolume() {
         let effective = isMuted ? 0 : volume
         playerA.volume = effective
@@ -644,6 +669,7 @@ public final class PlaybackEngine {
     // MARK: - File loading
 
     private func loadAndPlay(track: Track, seekTo: Double = 0) async {
+        applyGain(for: track, on: activeNode)
         currentTrack = track
         duration = Double(track.durationSecs ?? 0)
         currentTime = seekTo
@@ -1045,6 +1071,8 @@ public final class PlaybackEngine {
         if boundaries.count > 1, boundaries[1].trackId == next.id {
             boundaries.removeFirst()
             currentTrack = next
+            // Same node as the track before, so the gain changes at the boundary.
+            applyGain(for: next, on: activeNode)
             duration = Double(next.durationSecs ?? 0)
             // The boundary was built from the prefetched file, so it knows the length even when
             // the server does not. Without this the scrub bar went back to "-0:00" at the first
@@ -1113,6 +1141,7 @@ public final class PlaybackEngine {
                     self.handleActiveNodeConsumedSegment()
                 }
             }
+            applyGain(for: next, on: incomingNode)
             incomingNode.play()
 
             let steps = 20
