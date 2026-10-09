@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Search: the field sits in the tab bar's search capsule, as in own.audio's music app, instead
+  of under the title.
 - New welcome screen: the app icon, name and what it works with, one card for the server
   fields, a large Connect button and three short notes (the password stays on the phone,
   own.audio's Subsonic key, http as the default). The add-server form in Settings stays a

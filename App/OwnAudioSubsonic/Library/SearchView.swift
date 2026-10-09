@@ -73,7 +73,7 @@ struct SearchView: View {
         .listStyle(.plain)
         .overlay { if isSearching && result == nil { ProgressView() } }
         .navigationTitle("Search")
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Artists, Albums, Songs")
+        .searchable(text: $query, prompt: "Artists, Albums, Songs")
         .autocorrectionDisabled()
         .task(id: query) { await search() }
     }
