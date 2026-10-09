@@ -45,8 +45,14 @@ the trade-off chosen for simpler maintenance.
   test servers carry neither lyrics nor ReplayGain tags, so these were verified against a
   local Navidrome with a generated album (`.lrc` file, `LYRICS` tag, ReplayGain tags); the real
   servers verify that "no lyrics" is handled.
-- [ ] **P10: Release.** iPad layout, accessibility, localization, App Store listing,
-  public repo, launch posts.
+- [~] **P10: Release.**
+  - [x] iPad: adaptable sidebar; both UI tests pass on an iPad Air simulator.
+  - [x] Czech localization (glossary terms, plurals); a UI test walks the screens in Czech.
+  - [x] Large text: fixes from a UI test at the largest accessibility size.
+  - [x] README.
+  - [ ] App icon and App Store name.
+  - [ ] App Store listing (text in English and Czech, screenshots, privacy: no data collected).
+  - [ ] Public repository, launch posts (r/selfhosted, r/navidrome, Navidrome's apps page).
 
 ## Open questions
 
