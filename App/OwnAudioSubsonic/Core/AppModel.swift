@@ -8,6 +8,9 @@ import SubsonicKit
 @Observable
 @MainActor
 final class AppModel {
+    /// One per process: the phone UI and CarPlay drive the same player.
+    static let shared = AppModel()
+
     private(set) var servers: [ServerRecord] = []
     private(set) var hasLoaded = false
     private(set) var activeServerId: UUID? {
@@ -107,7 +110,17 @@ final class AppModel {
         activeServerId.flatMap { clients[$0] }
     }
 
+    private var loadTask: Task<Void, Never>?
+
+    /// Loads once, however many callers ask: the phone UI and CarPlay can both start the app.
     func load() async {
+        if let loadTask { return await loadTask.value }
+        let task = Task { await performLoad() }
+        loadTask = task
+        await task.value
+    }
+
+    private func performLoad() async {
         // UI tests start from a clean slate; the Keychain survives reinstalling the app.
         if ProcessInfo.processInfo.arguments.contains("-uiTestReset") {
             await store.clear()

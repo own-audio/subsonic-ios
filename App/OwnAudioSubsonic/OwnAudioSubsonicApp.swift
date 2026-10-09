@@ -2,14 +2,14 @@ import SwiftUI
 
 @main
 struct OwnAudioSubsonicApp: App {
-    @State private var model = AppModel()
+    @State private var model = AppModel.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
-                .task { await model.load() }
+                .task { if !model.hasLoaded { await model.load() } }
         }
         .onChange(of: scenePhase) { _, phase in
             // Audio keeps playing in the background, so this is a save, not a pause.
