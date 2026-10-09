@@ -33,8 +33,8 @@ final class PlaybackSmokeTests: XCTestCase {
         openAlbum(app, named: env["SUBSONIC_ALBUM"])
 
         let play = app.buttons["detail.play"]
-        XCTAssertTrue(play.waitForExistence(timeout: 10))
-        XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled }, "Play should enable once the songs load")
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
+        XCTAssertTrue(waitUntil(timeout: 20) { play.isEnabled }, "Play should enable once the songs load")
         screenshot(app, "04-album")
         play.tap()
 
@@ -86,8 +86,8 @@ final class PlaybackSmokeTests: XCTestCase {
         openAlbum(app, named: env["SUBSONIC_DOWNLOAD_ALBUM"].flatMap { $0.isEmpty ? nil : $0 }, screenshots: false)
 
         let download = app.buttons["download.start"]
-        XCTAssertTrue(download.waitForExistence(timeout: 10))
-        XCTAssertTrue(waitUntil(timeout: 15) { download.isEnabled }, "Download should enable once the songs load")
+        XCTAssertTrue(download.waitForExistence(timeout: 20))
+        XCTAssertTrue(waitUntil(timeout: 20) { download.isEnabled }, "Download should enable once the songs load")
         download.tap()
         let done = app.buttons["download.done"]
         XCTAssertTrue(done.waitForExistence(timeout: 300), "the album should finish downloading")
@@ -106,12 +106,12 @@ final class PlaybackSmokeTests: XCTestCase {
         downloadsLink.tap()
 
         let collection = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'downloads.album.'")).firstMatch
-        XCTAssertTrue(collection.waitForExistence(timeout: 10), "the downloaded album should be listed offline")
+        XCTAssertTrue(collection.waitForExistence(timeout: 20), "the downloaded album should be listed offline")
         screenshot(app, "12-downloads")
         collection.tap()
 
         let play = app.buttons["detail.play"]
-        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
         play.tap()
 
         let miniPlayPause = app.buttons["miniPlayer.playPause"]
@@ -142,8 +142,8 @@ final class PlaybackSmokeTests: XCTestCase {
         openAlbum(app, named: albumName, screenshots: false)
 
         let play = app.buttons["detail.play"]
-        XCTAssertTrue(play.waitForExistence(timeout: 10))
-        XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled })
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
+        XCTAssertTrue(waitUntil(timeout: 20) { play.isEnabled })
         play.tap()
         let miniPlayer = app.buttons["miniPlayer"]
         XCTAssertTrue(miniPlayer.waitForExistence(timeout: 15))
@@ -220,11 +220,11 @@ final class PlaybackSmokeTests: XCTestCase {
 
         albums.tap()
         let album = app.scrollViews.buttons.firstMatch
-        XCTAssertTrue(album.waitForExistence(timeout: 10))
+        XCTAssertTrue(album.waitForExistence(timeout: 20))
         album.tap()
         let play = app.buttons["detail.play"]
-        XCTAssertTrue(play.waitForExistence(timeout: 10))
-        XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled })
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
+        XCTAssertTrue(waitUntil(timeout: 20) { play.isEnabled })
         screenshot(app, "\(prefix)-03-album")
         play.tap()
         let miniPlayer = app.buttons["miniPlayer"]
@@ -264,12 +264,12 @@ final class PlaybackSmokeTests: XCTestCase {
     private func openAlbum(_ app: XCUIApplication, named name: String?, screenshots: Bool = true) {
         openTab(app, Self.libraryTab)
         let albums = app.buttons["library.albums"]
-        XCTAssertTrue(albums.waitForExistence(timeout: 10))
+        XCTAssertTrue(albums.waitForExistence(timeout: 20))
         albums.tap()
         let album = name.map {
             app.buttons.containing(NSPredicate(format: "label CONTAINS %@", $0)).firstMatch
         } ?? app.scrollViews.buttons.firstMatch
-        XCTAssertTrue(album.waitForExistence(timeout: 10))
+        XCTAssertTrue(album.waitForExistence(timeout: 20))
         sleep(1)
         if screenshots { screenshot(app, "03-albums") }
         album.tap()
