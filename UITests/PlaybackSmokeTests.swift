@@ -13,6 +13,10 @@ import XCTest
 final class PlaybackSmokeTests: XCTestCase {
     private var env: [String: String] { ProcessInfo.processInfo.environment }
 
+    /// The tests find some controls by their English label, and the simulator may be set to
+    /// another language the app is translated into.
+    private static let english = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+
     override func setUpWithError() throws {
         continueAfterFailure = false
         guard env["SUBSONIC_HOST"] != nil else {
@@ -22,7 +26,7 @@ final class PlaybackSmokeTests: XCTestCase {
 
     func testAddServerPlayAlbumAndSkip() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
+        app.launchArguments = ["-uiTestReset"] + Self.english
         app.launch()
 
         addServer(app)
@@ -76,7 +80,7 @@ final class PlaybackSmokeTests: XCTestCase {
     /// first one.
     func testDownloadAlbumAndPlayOffline() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
+        app.launchArguments = ["-uiTestReset"] + Self.english
         app.launch()
         addServer(app, screenshots: false)
         openAlbum(app, named: env["SUBSONIC_DOWNLOAD_ALBUM"].flatMap { $0.isEmpty ? nil : $0 }, screenshots: false)
@@ -90,7 +94,7 @@ final class PlaybackSmokeTests: XCTestCase {
         screenshot(app, "10-downloaded")
 
         app.terminate()
-        app.launchArguments = ["-simulateOffline"]
+        app.launchArguments = ["-simulateOffline"] + Self.english
         app.launch()
 
         let downloadsLink = app.buttons["Downloads"]
@@ -130,7 +134,7 @@ final class PlaybackSmokeTests: XCTestCase {
             throw XCTSkip("SUBSONIC_LYRICS_ALBUM is not set")
         }
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
+        app.launchArguments = ["-uiTestReset"] + Self.english
         app.launch()
         addServer(app, screenshots: false)
         openAlbum(app, named: albumName, screenshots: false)
@@ -170,24 +174,46 @@ final class PlaybackSmokeTests: XCTestCase {
     /// Walks the main screens in Czech and saves screenshots, to catch untranslated or
     /// clipped text. Finds everything by identifier, so it doesn't depend on the language.
     func testCzechScreens() throws {
+        try walkMainScreens(
+            prefix: "cs", arguments: ["-AppleLanguages", "(cs)", "-AppleLocale", "cs_CZ"],
+            albums: "Alba", settings: "Nastavení"
+        )
+    }
+
+    /// The same screens at the largest accessibility text size.
+    func testLargeTextScreens() throws {
+        try walkMainScreens(
+            prefix: "xxl", arguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] + Self.english,
+            albums: "Albums", settings: "Settings"
+        )
+    }
+
+    private func walkMainScreens(prefix: String, arguments: [String], albums albumsLabel: String, settings settingsLabel: String) throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset", "-AppleLanguages", "(cs)", "-AppleLocale", "cs_CZ"]
+        app.launchArguments = ["-uiTestReset"] + arguments
         app.launch()
         let address = app.textFields["addServer.address"]
+        sleep(2)
+        screenshot(app, "\(prefix)-01-onboarding")
+        // At large text sizes the form's fields start below the screen, and a form only
+        // creates the rows it shows.
+        for _ in 0..<4 where !address.exists { app.swipeUp() }
         XCTAssertTrue(address.waitForExistence(timeout: 10))
-        screenshot(app, "cs-01-onboarding")
         address.tap()
         address.typeText(env["SUBSONIC_HOST"]!)
         app.textFields["addServer.username"].tap()
         app.textFields["addServer.username"].typeText(env["SUBSONIC_USER"] ?? "")
         app.secureTextFields["addServer.password"].tap()
         app.secureTextFields["addServer.password"].typeText(env["SUBSONIC_PASSWORD"] ?? "")
-        app.buttons["addServer.connect"].tap()
-        let albums = app.buttons["Alba"]
-        XCTAssertTrue(albums.waitForExistence(timeout: 15))
+        let connect = app.buttons["addServer.connect"]
+        for _ in 0..<4 where !connect.isHittable { app.swipeUp() }
+        connect.tap()
+        sleep(4)
         dismissSavePasswordPrompt(app)
-        sleep(2)
-        screenshot(app, "cs-02-library")
+        screenshot(app, "\(prefix)-02-library")
+        let albums = app.buttons[albumsLabel]
+        for _ in 0..<4 where !albums.exists { app.swipeUp() }
+        XCTAssertTrue(albums.waitForExistence(timeout: 15))
 
         albums.tap()
         let album = app.scrollViews.buttons.firstMatch
@@ -196,19 +222,19 @@ final class PlaybackSmokeTests: XCTestCase {
         let play = app.buttons["detail.play"]
         XCTAssertTrue(play.waitForExistence(timeout: 10))
         XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled })
-        screenshot(app, "cs-03-album")
+        screenshot(app, "\(prefix)-03-album")
         play.tap()
         let miniPlayer = app.buttons["miniPlayer"]
         XCTAssertTrue(miniPlayer.waitForExistence(timeout: 20))
         miniPlayer.tap()
         XCTAssertTrue(app.descendants(matching: .any)["player.scrubber"].firstMatch.waitForExistence(timeout: 10))
         sleep(2)
-        screenshot(app, "cs-04-player")
+        screenshot(app, "\(prefix)-04-player")
         app.buttons["player.close"].tap()
 
-        app.buttons["Nastavení"].firstMatch.tap()
+        app.buttons[settingsLabel].firstMatch.tap()
         sleep(1)
-        screenshot(app, "cs-05-settings")
+        screenshot(app, "\(prefix)-05-settings")
     }
 
     private func addServer(_ app: XCUIApplication, screenshots: Bool = true) {
