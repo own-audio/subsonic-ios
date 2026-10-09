@@ -41,13 +41,15 @@ final class AppStoreScreenshots: XCTestCase {
         sleep(4)
         dismissSavePasswordPrompt(app)
 
-        // Library, with covers loaded.
-        let albums = app.buttons[czech ? "Alba" : "Albums"]
-        XCTAssertTrue(albums.waitForExistence(timeout: 15))
-        sleep(3)
-        save(app, "1-library")
+        // Home, with covers loaded.
+        XCTAssertTrue(app.buttons["home.settings"].waitForExistence(timeout: 15))
+        sleep(4)
+        save(app, "1-home")
 
-        // Album.
+        // Library, then albums.
+        tab(app, czech ? "Knihovna" : "Library").tap()
+        let albums = app.buttons["library.albums"]
+        XCTAssertTrue(albums.waitForExistence(timeout: 15))
         albums.tap()
         let album = env["SCREENSHOT_ALBUM"].map {
             app.buttons.containing(NSPredicate(format: "label CONTAINS %@", $0)).firstMatch
@@ -90,10 +92,15 @@ final class AppStoreScreenshots: XCTestCase {
         app.buttons[czech ? "Hotovo" : "Done"].tap()
         app.buttons["player.close"].tap()
 
-        // Settings.
-        app.buttons[czech ? "Nastavení" : "Settings"].firstMatch.tap()
+        // Settings, from Home's gear.
+        tab(app, czech ? "Domů" : "Home").tap()
+        app.buttons["home.settings"].tap()
         sleep(1)
         save(app, "7-settings")
+    }
+
+    private func tab(_ app: XCUIApplication, _ label: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label == %@", label)).firstMatch
     }
 
     private func save(_ app: XCUIApplication, _ name: String) {

@@ -4,16 +4,6 @@
     "" : {
       "shouldTranslate" : false
     },
-    "%@ of %@" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ z %2$@"
-          }
-        }
-      }
-    },
     "%@ · %@" : {
       "shouldTranslate" : false
     },
@@ -27,6 +17,16 @@
         }
       }
     },
+    "%@ of %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ z %2$@"
+          }
+        }
+      }
+    },
     "%lld" : {
       "shouldTranslate" : false
     },
@@ -35,12 +35,6 @@
         "cs" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld album"
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -51,6 +45,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld alba"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld album"
                 }
               },
               "other" : {
@@ -79,12 +79,6 @@
         "cs" : {
           "variations" : {
             "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld skladba"
-                }
-              },
               "few" : {
                 "stringUnit" : {
                   "state" : "translated",
@@ -95,6 +89,12 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld skladby"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld skladba"
                 }
               },
               "other" : {
@@ -138,7 +138,19 @@
         }
       }
     },
+    "5 minutes" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 minut"
+          }
+        }
+      }
+    },
     "15 minutes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -149,6 +161,7 @@
       }
     },
     "30 minutes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -159,6 +172,7 @@
       }
     },
     "45 minutes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -168,17 +182,8 @@
         }
       }
     },
-    "5 minutes" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 minut"
-          }
-        }
-      }
-    },
     "60 minutes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -194,6 +199,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O aplikaci"
+          }
+        }
+      }
+    },
+    "Add a server on your iPhone" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přidejte server na iPhonu"
           }
         }
       }
@@ -214,16 +229,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Přidat server"
-          }
-        }
-      }
-    },
-    "Add a server on your iPhone" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Přidejte server na iPhonu"
           }
         }
       }
@@ -318,16 +323,6 @@
         }
       }
     },
-    "Artists, Albums, Songs" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Interpreti, alba, skladby"
-          }
-        }
-      }
-    },
     "Artists, albums and songs on %@" : {
       "localizations" : {
         "cs" : {
@@ -338,7 +333,18 @@
         }
       }
     },
+    "Artists, Albums, Songs" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interpreti, alba, skladby"
+          }
+        }
+      }
+    },
     "Bass Boost" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -449,6 +455,7 @@
       }
     },
     "Could not load this track." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -459,6 +466,7 @@
       }
     },
     "Could not play this track." : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -474,16 +482,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Načtení se nezdařilo"
-          }
-        }
-      }
-    },
-    "Couldn't Remove Server" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server se nepodařilo odebrat"
           }
         }
       }
@@ -504,6 +502,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server není dostupný. Zkontrolujte adresu a jestli se k němu tento telefon dostane."
+          }
+        }
+      }
+    },
+    "Couldn't Remove Server" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server se nepodařilo odebrat"
           }
         }
       }
@@ -648,22 +656,22 @@
         }
       }
     },
-    "EQ" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ekvalizér"
-          }
-        }
-      }
-    },
     "Edit Playlist" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Upravit playlist"
+          }
+        }
+      }
+    },
+    "EQ" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekvalizér"
           }
         }
       }
@@ -749,6 +757,7 @@
       }
     },
     "Flat" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -768,7 +777,18 @@
         }
       }
     },
+    "Genres" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žánry"
+          }
+        }
+      }
+    },
     "High Speed 1" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -779,11 +799,22 @@
       }
     },
     "High Speed 2" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rychlé přehrávání 2"
+          }
+        }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domů"
           }
         }
       }
@@ -829,6 +860,7 @@
       }
     },
     "Loudness" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -884,6 +916,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nejhranější"
+          }
+        }
+      }
+    },
+    "music.example.com or 192.168.1.10:4533" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "music.example.com nebo 192.168.1.10:4533"
           }
         }
       }
@@ -948,66 +990,6 @@
         }
       }
     },
-    "No Albums" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Žádná alba"
-          }
-        }
-      }
-    },
-    "No Artists" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Žádní interpreti"
-          }
-        }
-      }
-    },
-    "No Favorites" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Žádné oblíbené"
-          }
-        }
-      }
-    },
-    "No Lyrics" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text není k dispozici"
-          }
-        }
-      }
-    },
-    "No Music Yet" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zatím žádná hudba"
-          }
-        }
-      }
-    },
-    "No Playlists" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Žádné playlisty"
-          }
-        }
-      }
-    },
     "No albums" : {
       "localizations" : {
         "cs" : {
@@ -1018,7 +1000,27 @@
         }
       }
     },
+    "No Albums" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žádná alba"
+          }
+        }
+      }
+    },
     "No artists" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žádní interpreti"
+          }
+        }
+      }
+    },
+    "No Artists" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1068,6 +1070,46 @@
         }
       }
     },
+    "No Favorites" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žádné oblíbené"
+          }
+        }
+      }
+    },
+    "No Genres" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žádné žánry"
+          }
+        }
+      }
+    },
+    "No Lyrics" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text není k dispozici"
+          }
+        }
+      }
+    },
+    "No Music Yet" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatím žádná hudba"
+          }
+        }
+      }
+    },
     "No playlists" : {
       "localizations" : {
         "cs" : {
@@ -1078,12 +1120,22 @@
         }
       }
     },
-    "Nothing Downloaded" : {
+    "No Playlists" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nic není staženo"
+            "value" : "Žádné playlisty"
+          }
+        }
+      }
+    },
+    "No Songs" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Žádné skladby"
           }
         }
       }
@@ -1099,6 +1151,16 @@
       }
     },
     "Nothing downloaded" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nic není staženo"
+          }
+        }
+      }
+    },
+    "Nothing Downloaded" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1128,22 +1190,22 @@
         }
       }
     },
-    "OK" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
-          }
-        }
-      }
-    },
     "Off" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vypnuto"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         }
       }
@@ -1194,6 +1256,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pozastavit"
+          }
+        }
+      }
+    },
+    "Pick a Section" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyberte sekci"
           }
         }
       }
@@ -1368,22 +1440,22 @@
         }
       }
     },
-    "Remove Download" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odebrat stažené"
-          }
-        }
-      }
-    },
     "Remove all downloads?" : {
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odebrat všechna stažená?"
+          }
+        }
+      }
+    },
+    "Remove Download" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odebrat stažené"
           }
         }
       }
@@ -1538,6 +1610,16 @@
         }
       }
     },
+    "Server" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        }
+      }
+    },
     "Servers" : {
       "localizations" : {
         "cs" : {
@@ -1584,6 +1666,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Náhodně"
+          }
+        }
+      }
+    },
+    "Shuffle All" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Náhodně vše"
           }
         }
       }
@@ -1669,6 +1761,7 @@
       }
     },
     "Spoken Word" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -1889,6 +1982,7 @@
       }
     },
     "Treble Boost" : {
+      "extractionState" : "stale",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
@@ -2014,16 +2108,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bez http:// nebo https:// se použije http. Heslo zůstává v klíčence tohoto telefonu a na server se nikdy neposílá, jen jednorázový token z něj vytvořený.\n\nown.audio: přihlaste se e-mailem a klíčem Subsonic z nastavení webové aplikace, ne heslem k účtu."
-          }
-        }
-      }
-    },
-    "music.example.com or 192.168.1.10:4533" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "music.example.com nebo 192.168.1.10:4533"
           }
         }
       }

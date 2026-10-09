@@ -18,7 +18,7 @@ struct ArtistsView: View {
                             ArtistImage(artist: artist, size: 44)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(artist.name).lineLimit(1)
-                                Text(artist.albumCount == 1 ? String(localized: "1 album") : String(localized: "\(artist.albumCount) albums"))
+                                Text(albumCountText(artist.albumCount))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }

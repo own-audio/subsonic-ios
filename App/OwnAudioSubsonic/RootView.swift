@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// First run: add a server. After that: Library, Search and Settings, with the mini player
-/// above the tab bar and the full player as a cover.
+/// First run: add a server. After that four tabs, as in own.audio's music app: Home, Library,
+/// Playlists and Search, with the mini player above the tab bar and the full player as a cover.
 struct RootView: View {
     @Environment(AppModel.self) private var model
     @State private var isShowingPlayer = false
@@ -31,29 +31,84 @@ struct RootView: View {
 
     private var tabs: some View {
         TabView {
-            Tab("Library", systemImage: "music.note.house") {
+            Tab("Home", systemImage: "house") {
                 NavigationStack {
-                    LibraryView().libraryDestinations()
+                    HomeView().libraryDestinations()
                 }
                 .miniPlayerInset { isShowingPlayer = true }
             }
-            Tab("Search", systemImage: "magnifyingglass") {
+            Tab("Library", systemImage: "square.stack") {
+                LibraryTab()
+                    .miniPlayerInset { isShowingPlayer = true }
+            }
+            Tab("Playlists", systemImage: "music.note.list") {
+                NavigationStack {
+                    PlaylistsView().libraryDestinations()
+                }
+                .miniPlayerInset { isShowingPlayer = true }
+            }
+            // The search role puts it in its own capsule at the trailing edge, as in Apple's apps.
+            Tab("Search", systemImage: "magnifyingglass", role: .search) {
                 NavigationStack {
                     SearchView().libraryDestinations()
                 }
                 .miniPlayerInset { isShowingPlayer = true }
             }
-            Tab("Settings", systemImage: "gear") {
-                NavigationStack {
-                    SettingsView()
-                }
-                .miniPlayerInset { isShowingPlayer = true }
-            }
         }
-        // A sidebar on iPad, the tab bar on iPhone.
-        .tabViewStyle(.sidebarAdaptable)
         // Switching servers starts every tab over: their screens belong to the old library.
         .id(model.activeServerId)
+    }
+}
+
+/// A grid of sections on iPhone; on iPad, a sidebar beside the open section.
+private struct LibraryTab: View {
+    private enum SidebarItem: Hashable {
+        case section(LibrarySection)
+        case downloads
+    }
+
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var selection: SidebarItem? = .section(.artists)
+
+    var body: some View {
+        if sizeClass == .regular {
+            NavigationSplitView {
+                List(selection: $selection) {
+                    ForEach(LibrarySection.allCases) { section in
+                        Label(section.title, systemImage: section.systemImage)
+                            .tag(SidebarItem.section(section))
+                            .accessibilityIdentifier("library.\(section.rawValue)")
+                    }
+                    Label("Downloads", systemImage: "arrow.down.circle")
+                        .tag(SidebarItem.downloads)
+                        .accessibilityIdentifier("library.downloads")
+                }
+                .navigationTitle("Library")
+                .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
+            } detail: {
+                NavigationStack {
+                    detail.libraryDestinations()
+                }
+                .id(selection)
+            }
+        } else {
+            NavigationStack {
+                LibraryView().libraryDestinations()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        switch selection {
+        case .section(.artists): ArtistsView()
+        case .section(.albums): AlbumsView(initialType: .alphabeticalByName)
+        case .section(.songs): SongsView()
+        case .section(.genres): GenresView()
+        case .section(.favorites): FavoritesView()
+        case .downloads: DownloadsView()
+        case nil: ContentUnavailableView("Pick a Section", systemImage: "square.stack")
+        }
     }
 }
 

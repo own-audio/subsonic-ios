@@ -6,7 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Organized like own.audio's music app: four tabs, Home, Library, Playlists and Search (its own
+  capsule at the trailing edge). Home has Shuffle All (a random hundred from the server), then
+  Recently Played, Recently Added and Playlists, and a gear that opens Settings as a sheet;
+  with more than one server, a server menu. Library is a grid of Artists, Albums, Songs,
+  Genres and Favorites with Downloads in the toolbar, and a sidebar on iPad. The Settings tab
+  is gone.
+
 ### Added
+
+- Songs: every song, a page at a time, with Play and Shuffle. Genres: each genre's albums and a
+  shuffle across its songs. `SubsonicKit`: `genres()`, `albums(genre:)`, `songs(size:offset:)`
+  (an empty `search3`), `randomSongs(size:genre:)`.
 
 - App skeleton: XcodeGen project (`project.yml`), iPhone and iPad, iOS 18+, background audio,
   plain-http servers allowed (home servers rarely have TLS on the LAN).
@@ -120,6 +133,10 @@ All notable changes to this project are documented here. The format follows
   `AVAudioEngine` playing fixture audio.
 
 ### Fixed
+
+- Paging all songs stops when a page brings nothing new: the own.audio server ignores
+  `songOffset` in `search3` and returns the first page every time (recorded as a known issue
+  in the live tests until the server is fixed).
 
 - UI tests ran in the simulator's language, which broke them once the app had a Czech
   translation; they now launch in English (the Czech test excepted).

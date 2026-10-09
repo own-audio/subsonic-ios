@@ -97,10 +97,12 @@ final class PlaybackSmokeTests: XCTestCase {
         app.launchArguments = ["-simulateOffline"] + Self.english
         app.launch()
 
-        let downloadsLink = app.buttons["Downloads"]
-        XCTAssertTrue(downloadsLink.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["home.settings"].waitForExistence(timeout: 15))
         sleep(2)
-        screenshot(app, "11-offline-library")
+        screenshot(app, "11-offline-home")
+        openTab(app, Self.libraryTab)
+        let downloadsLink = app.buttons["library.downloads"]
+        XCTAssertTrue(downloadsLink.waitForExistence(timeout: 10))
         downloadsLink.tap()
 
         let collection = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'downloads.album.'")).firstMatch
@@ -175,20 +177,18 @@ final class PlaybackSmokeTests: XCTestCase {
     /// clipped text. Finds everything by identifier, so it doesn't depend on the language.
     func testCzechScreens() throws {
         try walkMainScreens(
-            prefix: "cs", arguments: ["-AppleLanguages", "(cs)", "-AppleLocale", "cs_CZ"],
-            albums: "Alba", settings: "Nastavení"
+            prefix: "cs", arguments: ["-AppleLanguages", "(cs)", "-AppleLocale", "cs_CZ"]
         )
     }
 
     /// The same screens at the largest accessibility text size.
     func testLargeTextScreens() throws {
         try walkMainScreens(
-            prefix: "xxl", arguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] + Self.english,
-            albums: "Albums", settings: "Settings"
+            prefix: "xxl", arguments: ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] + Self.english
         )
     }
 
-    private func walkMainScreens(prefix: String, arguments: [String], albums albumsLabel: String, settings settingsLabel: String) throws {
+    private func walkMainScreens(prefix: String, arguments: [String]) throws {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTestReset"] + arguments
         app.launch()
@@ -210,10 +210,13 @@ final class PlaybackSmokeTests: XCTestCase {
         connect.tap()
         sleep(4)
         dismissSavePasswordPrompt(app)
-        screenshot(app, "\(prefix)-02-library")
-        let albums = app.buttons[albumsLabel]
-        for _ in 0..<4 where !albums.exists { app.swipeUp() }
+        XCTAssertTrue(app.buttons["home.settings"].waitForExistence(timeout: 15))
+        sleep(2)
+        screenshot(app, "\(prefix)-02-home")
+        openTab(app, Self.libraryTab)
+        let albums = app.buttons["library.albums"]
         XCTAssertTrue(albums.waitForExistence(timeout: 15))
+        screenshot(app, "\(prefix)-02-library")
 
         albums.tap()
         let album = app.scrollViews.buttons.firstMatch
@@ -232,9 +235,11 @@ final class PlaybackSmokeTests: XCTestCase {
         screenshot(app, "\(prefix)-04-player")
         app.buttons["player.close"].tap()
 
-        app.buttons[settingsLabel].firstMatch.tap()
+        openTab(app, Self.homeTab)
+        app.buttons["home.settings"].tap()
         sleep(1)
         screenshot(app, "\(prefix)-05-settings")
+        app.buttons["settings.done"].tap()
     }
 
     private func addServer(_ app: XCUIApplication, screenshots: Bool = true) {
@@ -249,15 +254,18 @@ final class PlaybackSmokeTests: XCTestCase {
         app.secureTextFields["addServer.password"].typeText(env["SUBSONIC_PASSWORD"] ?? "")
         app.buttons["addServer.connect"].tap()
 
-        XCTAssertTrue(app.buttons["Albums"].waitForExistence(timeout: 15), "the library should open after connecting")
         dismissSavePasswordPrompt(app)
+        XCTAssertTrue(app.buttons["home.settings"].waitForExistence(timeout: 15), "Home should open after connecting")
         sleep(2)
-        if screenshots { screenshot(app, "02-library") }
+        if screenshots { screenshot(app, "02-home") }
     }
 
     /// Without a name, the first album in the grid.
     private func openAlbum(_ app: XCUIApplication, named name: String?, screenshots: Bool = true) {
-        app.buttons["Albums"].tap()
+        openTab(app, Self.libraryTab)
+        let albums = app.buttons["library.albums"]
+        XCTAssertTrue(albums.waitForExistence(timeout: 10))
+        albums.tap()
         let album = name.map {
             app.buttons.containing(NSPredicate(format: "label CONTAINS %@", $0)).firstMatch
         } ?? app.scrollViews.buttons.firstMatch
@@ -265,6 +273,16 @@ final class PlaybackSmokeTests: XCTestCase {
         sleep(1)
         if screenshots { screenshot(app, "03-albums") }
         album.tap()
+    }
+
+    static let homeTab = ["Home", "Domů"]
+    static let libraryTab = ["Library", "Knihovna"]
+
+    /// Tabs can't carry identifiers, so they are found by their label in either language.
+    private func openTab(_ app: XCUIApplication, _ labels: [String]) {
+        let tab = app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+        XCTAssertTrue(tab.waitForExistence(timeout: 10))
+        tab.tap()
     }
 
     /// iOS offers to save the password after a sign-in form. It's the system's sheet, in the

@@ -1,23 +1,50 @@
 {
   "sourceLanguage" : "en",
-  "version" : "1.0",
   "strings" : {
-    "NSLocalNetworkUsageDescription" : {
-      "comment" : "Shown when the app first reaches a server on the local network.",
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
       "localizations" : {
-        "cs" : {
+        "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Připojuje se k hudebnímu serveru ve vaší místní síti."
+            "state" : "new",
+            "value" : "own subsonic"
           }
         }
-      }
-    },
-    "CFBundleDisplayName" : {
+      },
       "shouldTranslate" : false
     },
     "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "OwnAudioSubsonic"
+          }
+        }
+      },
       "shouldTranslate" : false
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Shown when the app first reaches a server on the local network.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Připojuje se k hudebnímu serveru ve vaší místní síti."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connects to the music server on your local network."
+          }
+        }
+      }
     }
-  }
+  },
+  "version" : "1.0"
 }

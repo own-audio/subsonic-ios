@@ -12,6 +12,9 @@ enum Route: Hashable {
     case playlists
     case favorites
     case downloads
+    case songs
+    case genres
+    case genre(Genre)
 }
 
 extension View {
@@ -26,6 +29,9 @@ extension View {
             case .playlists: PlaylistsView()
             case .favorites: FavoritesView()
             case .downloads: DownloadsView()
+            case .songs: SongsView()
+            case .genres: GenresView()
+            case .genre(let genre): GenreView(genre: genre)
             }
         }
     }
