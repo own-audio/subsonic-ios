@@ -50,6 +50,8 @@ struct RootView: View {
                 .miniPlayerInset { isShowingPlayer = true }
             }
         }
+        // A sidebar on iPad, the tab bar on iPhone.
+        .tabViewStyle(.sidebarAdaptable)
         // Switching servers starts every tab over: their screens belong to the old library.
         .id(model.activeServerId)
     }

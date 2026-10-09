@@ -83,7 +83,7 @@ struct RatingMenu: View {
                 Button("Clear Rating", role: .destructive) { set(0) }
             }
         } label: {
-            Label(rating.map { "Rating: \(String(repeating: "★", count: $0))" } ?? String(localized: "Rate"), systemImage: "star.leadinghalf.filled")
+            Label(rating.map { String(localized: "Rating: \(String(repeating: "★", count: $0))") } ?? String(localized: "Rate"), systemImage: "star.leadinghalf.filled")
         }
     }
 }

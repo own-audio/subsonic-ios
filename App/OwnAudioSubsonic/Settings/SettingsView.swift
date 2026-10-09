@@ -28,7 +28,7 @@ struct SettingsView: View {
                 .accessibilityIdentifier("settings.servers")
             }
 
-            Section("Downloads") {
+            Section {
                 NavigationLink {
                     DownloadsView()
                 } label: {
