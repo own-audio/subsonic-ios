@@ -1,4 +1,4 @@
-# subsonic
+# own.audio for Subsonic
 
 A native iPhone and iPad player for Subsonic and OpenSubsonic servers: Navidrome, Gonic,
 Airsonic, LMS, Ampache, own.audio and others. Swift and SwiftUI, no web views.

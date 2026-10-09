@@ -100,6 +100,9 @@ All notable changes to this project are documented here. The format follows
   and the full player caps its text at the first accessibility size so its controls still
   fit. UI test: the main screens at the largest size.
 - README for the public repository.
+- App icon: the own.audio construction in orange, light with a dark-mode variant (source in
+  `Design/`). Home-screen name "own subsonic", like own music, own book and own podcast; the
+  store name is "own.audio for Subsonic".
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
