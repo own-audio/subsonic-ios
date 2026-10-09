@@ -66,7 +66,7 @@ struct AddServerView: View {
                     .onSubmit { if canConnect { connect() } }
                     .accessibilityIdentifier("addServer.password")
             } footer: {
-                Text("Without http:// or https://, http is used. The password stays in this phone's Keychain and is never sent to the server, only a one-time token made from it.")
+                Text("Without http:// or https://, http is used. The password stays in this phone's Keychain and is never sent to the server, only a one-time token made from it.\n\nown.audio: sign in with your email and the Subsonic key from the web app's settings, not your account password.")
             }
 
             Section {

@@ -11,6 +11,7 @@ enum Route: Hashable {
     case artists
     case playlists
     case favorites
+    case downloads
 }
 
 extension View {
@@ -24,6 +25,7 @@ extension View {
             case .artists: ArtistsView()
             case .playlists: PlaylistsView()
             case .favorites: FavoritesView()
+            case .downloads: DownloadsView()
             }
         }
     }
@@ -167,6 +169,12 @@ struct SongRow: View {
                 }
             }
             Spacer(minLength: 0)
+            if let id = model.compositeId(song.id), model.downloads.isDownloaded(id) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Downloaded")
+            }
             if let id = model.compositeId(song.id), model.isStarred(id) {
                 Image(systemName: "star.fill")
                     .font(.caption2)
@@ -218,7 +226,10 @@ struct PlayShuffleButtons: View {
 func songsSummary(_ songs: [Song]) -> String {
     let seconds = songs.compactMap(\.duration).reduce(0, +)
     let minutes = Int((Double(seconds) / 60).rounded())
-    return minutes > 0
-        ? String(localized: "\(songs.count) songs, \(minutes) min")
-        : String(localized: "\(songs.count) songs")
+    return minutes > 0 ? "\(songCountText(songs.count)), \(minutes) min" : songCountText(songs.count)
+}
+
+/// "1 song", "12 songs". Proper plural rules for other languages come with localization.
+func songCountText(_ count: Int) -> String {
+    count == 1 ? String(localized: "1 song") : String(localized: "\(count) songs")
 }

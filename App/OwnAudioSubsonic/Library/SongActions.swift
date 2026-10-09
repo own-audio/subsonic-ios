@@ -34,6 +34,21 @@ private struct SongActions: ViewModifier {
                 } label: {
                     Label("Add to Playlist…", systemImage: "text.badge.plus")
                 }
+                if let id {
+                    if model.downloads.isDownloaded(id) {
+                        Button(role: .destructive) {
+                            model.downloads.remove(trackId: id)
+                        } label: {
+                            Label("Remove Download", systemImage: "trash")
+                        }
+                    } else {
+                        Button {
+                            model.download(songs: [song])
+                        } label: {
+                            Label("Download", systemImage: "arrow.down.circle")
+                        }
+                    }
+                }
                 if let removeFromPlaylist {
                     Button(role: .destructive, action: removeFromPlaylist) {
                         Label("Remove from Playlist", systemImage: "minus.circle")

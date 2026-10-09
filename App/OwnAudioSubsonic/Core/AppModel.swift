@@ -19,6 +19,7 @@ final class AppModel {
     let equalizer: EqualizerStore
     let covers: CoverArtLoader
     let resumeStore: ResumeStore
+    let downloads: DownloadManager
 
     /// Starred songs, albums and artists, as composite ids (`TrackID`), learned from whatever
     /// the screens have loaded and kept current when the listener stars or unstars.
@@ -52,6 +53,16 @@ final class AppModel {
 
     private static let activeServerKey = "activeServerId"
     private static let scrobblingKey = "scrobblingEnabled"
+
+    /// UI tests check offline playback by pointing every server at an address nothing answers.
+    private static var isSimulatingOffline: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-simulateOffline")
+        #else
+        false
+        #endif
+    }
+    private static let unreachableHost = URL(string: "http://127.0.0.1:9")!
     private var scrobbler: ScrobbleTracker?
     private var scrobbleTickTask: Task<Void, Never>?
     private let pendingScrobbles = PendingScrobbles()
@@ -61,6 +72,7 @@ final class AppModel {
         let registry = ClientRegistry()
         self.registry = registry
         covers = CoverArtLoader(registry: registry)
+        downloads = DownloadManager(registry: registry)
         fileCache = TrackFileCache(remoteURL: { try await registry.streamURL(trackId: $0) })
         playbackSettings = PlaybackSettingsStore()
         equalizer = EqualizerStore()
@@ -79,6 +91,10 @@ final class AppModel {
         }
         scrobblingEnabled = UserDefaults.standard.object(forKey: Self.scrobblingKey) as? Bool ?? true
         wireScrobbling()
+        // A downloaded song plays from the phone whether or not the server can be reached.
+        let files = downloads.files
+        let fileCache = fileCache
+        Task { await fileCache.setLocalFileLookup { files.url(for: $0) } }
     }
 
     var activeServer: ServerRecord? {
@@ -95,12 +111,14 @@ final class AppModel {
             await store.clear()
             UserDefaults.standard.removeObject(forKey: Self.activeServerKey)
             await covers.clear()
+            downloads.removeAll()
         }
         servers = await store.loadAll()
         await rebuildClients()
         let saved = UserDefaults.standard.string(forKey: Self.activeServerKey).flatMap(UUID.init)
         activeServerId = servers.contains { $0.id == saved } ? saved : servers.first?.id
         hasLoaded = true
+        downloads.resume()
         await flushPendingScrobbles()
     }
 
@@ -128,6 +146,7 @@ final class AppModel {
     func removeServer(id: UUID) async throws {
         try await store.remove(id: id)
         servers.removeAll { $0.id == id }
+        downloads.removeAll(serverId: id)
         if let track = engine.currentTrack, TrackID.parse(track.id)?.serverId == id { engine.stop() }
         await rebuildClients()
         if activeServerId == id { activeServerId = servers.first?.id }
@@ -321,11 +340,53 @@ final class AppModel {
         activeServerId.map { TrackID.make(serverId: $0, itemId: itemId) }
     }
 
+    // MARK: - Downloads
+
+    func download(album: Album, songs: [Song]) {
+        guard let serverId = activeServerId else { return }
+        downloads.download(album: album, songs: songs, serverId: serverId)
+        prefetchCovers([album.coverArt ?? album.id] + songs.compactMap { $0.coverArt ?? $0.albumId }, serverId: serverId)
+    }
+
+    func download(playlist: Playlist, songs: [Song]) {
+        guard let serverId = activeServerId else { return }
+        downloads.download(playlist: playlist, songs: songs, serverId: serverId)
+        prefetchCovers([playlist.coverArt].compactMap { $0 } + songs.compactMap { $0.coverArt ?? $0.albumId }, serverId: serverId)
+    }
+
+    func download(songs: [Song]) {
+        guard let serverId = activeServerId else { return }
+        downloads.download(songs: songs, serverId: serverId)
+        prefetchCovers(songs.compactMap { $0.coverArt ?? $0.albumId }, serverId: serverId)
+    }
+
+    /// Covers at the sizes the screens ask for, so a downloaded album looks the same offline.
+    private func prefetchCovers(_ coverIds: [String], serverId: UUID) {
+        let covers = covers
+        let ids = Array(Set(coverIds)).map { TrackID.make(serverId: serverId, itemId: $0) }
+        Task.detached(priority: .utility) {
+            for id in ids {
+                for size in [120, 300, 600, 1000] { _ = await covers.image(artworkId: id, size: size) }
+            }
+        }
+    }
+
+    /// Plays downloaded songs, each from the server it came from, whichever is selected.
+    func play(downloaded: [DownloadManager.DownloadedTrack], startTrackId: String? = nil, shuffled: Bool = false, containerId: String? = nil) {
+        let tracks = downloaded.compactMap { item -> Track? in
+            guard let serverId = TrackID.parse(item.trackId)?.serverId else { return nil }
+            return item.song.track(serverId: serverId)
+        }
+        guard !tracks.isEmpty else { return }
+        engine.setShuffled(shuffled)
+        Task { await engine.play(tracks: tracks, startTrackId: startTrackId, containerId: containerId) }
+    }
+
     private func rebuildClients() async {
         clients = Dictionary(uniqueKeysWithValues: servers.map { record in
             (record.id, SubsonicClient(
-                host: record.credentials.host, username: record.credentials.username,
-                password: record.credentials.password
+                host: Self.isSimulatingOffline ? Self.unreachableHost : record.credentials.host,
+                username: record.credentials.username, password: record.credentials.password
             ))
         })
         await registry.set(clients)

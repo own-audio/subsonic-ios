@@ -56,7 +56,7 @@ struct PlaylistsView: View {
     }
 
     private func subtitle(_ playlist: Playlist) -> String {
-        let songs = String(localized: "\(playlist.songCount) songs")
+        let songs = songCountText(playlist.songCount)
         guard let owner = playlist.owner, owner != model.activeServer?.credentials.username else { return songs }
         return String(localized: "\(songs) · by \(owner)")
     }
@@ -132,6 +132,14 @@ struct PlaylistDetailView: View {
         .navigationTitle(playlist.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                CollectionDownloadButton(
+                    collectionId: model.activeServerId.map { DownloadManager.collectionId(kind: .playlist, serverId: $0, itemId: playlist.id) },
+                    isEnabled: songs?.isEmpty == false
+                ) {
+                    if let songs { model.download(playlist: playlist, songs: songs) }
+                }
+            }
             if isOwn {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {

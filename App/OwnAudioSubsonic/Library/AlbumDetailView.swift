@@ -36,6 +36,14 @@ struct AlbumDetailView: View {
         .navigationTitle(album.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                CollectionDownloadButton(
+                    collectionId: model.activeServerId.map { DownloadManager.collectionId(kind: .album, serverId: $0, itemId: album.id) },
+                    isEnabled: songs?.isEmpty == false
+                ) {
+                    if case .loaded(let loaded) = state { model.download(album: loaded.album, songs: loaded.songs) }
+                }
+            }
             if let id = model.compositeId(album.id) {
                 ToolbarItem(placement: .topBarTrailing) {
                     let starred = model.isStarred(id)

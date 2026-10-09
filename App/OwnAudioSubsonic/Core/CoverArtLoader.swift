@@ -43,7 +43,7 @@ actor CoverArtLoader {
     }
 
     private func load(artworkId: String, size: Int, key: String) async -> UIImage? {
-        let file = directory.appendingPathComponent(Self.fileName(for: key))
+        let file = directory.appendingPathComponent(Self.fileName(artworkId: artworkId, size: size))
         if let data = try? Data(contentsOf: file), let image = UIImage(data: data) {
             memory.setObject(image, forKey: key as NSString)
             return image
@@ -53,14 +53,35 @@ actor CoverArtLoader {
               let (data, response) = try? await URLSession.shared.data(from: client.coverURL(id: coverId, size: size)),
               (response as? HTTPURLResponse)?.statusCode == 200,
               let image = UIImage(data: data)
-        else { return nil }
+        else {
+            // Offline, or the server is down: any size of the same cover beats a placeholder.
+            return cachedOtherSize(artworkId: artworkId, near: size)
+        }
         memory.setObject(image, forKey: key as NSString)
         try? data.write(to: file, options: .atomic)
         return image
     }
 
-    private static func fileName(for key: String) -> String {
-        Data(key.utf8).base64EncodedString()
+    /// The closest size at or above `size`, else the largest below it.
+    private func cachedOtherSize(artworkId: String, near size: Int) -> UIImage? {
+        let prefix = Self.encode(artworkId) + "@"
+        let sizes = ((try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? [])
+            .filter { $0.hasPrefix(prefix) }
+            .compactMap { Int($0.dropFirst(prefix.count)) }
+        let ordered = sizes.filter { $0 >= size }.sorted() + sizes.filter { $0 < size }.sorted(by: >)
+        for candidate in ordered {
+            let file = directory.appendingPathComponent(Self.fileName(artworkId: artworkId, size: candidate))
+            if let data = try? Data(contentsOf: file), let image = UIImage(data: data) { return image }
+        }
+        return nil
+    }
+
+    private static func fileName(artworkId: String, size: Int) -> String {
+        "\(encode(artworkId))@\(size)"
+    }
+
+    private static func encode(_ text: String) -> String {
+        Data(text.utf8).base64EncodedString()
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "+", with: "-")
     }

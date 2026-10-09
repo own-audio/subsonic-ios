@@ -21,6 +21,14 @@ struct SettingsView: View {
                 .accessibilityIdentifier("settings.servers")
             }
 
+            Section("Downloads") {
+                NavigationLink {
+                    DownloadsView()
+                } label: {
+                    LabeledContent("Downloads", value: ByteCountFormatter.string(fromByteCount: model.downloads.totalBytes, countStyle: .file))
+                }
+            }
+
             CrossfadeSettings(settings: model.playbackSettings)
 
             Section {
