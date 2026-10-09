@@ -90,6 +90,7 @@ struct AlbumDetailView: View {
                 Text(album.name)
                     .font(.title2.bold())
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let artist = album.artist {
                     if let artistId = album.artistId {
                         // A `NavigationLink` inside a `List` becomes a full-width row with a

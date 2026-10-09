@@ -38,6 +38,9 @@ struct PlayerView: View {
                 }
             }
         }
+        // A screen of controls: past this size the transport and tools no longer fit. Lists
+        // elsewhere in the app scale all the way.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .queue: QueueSheet()
@@ -150,8 +153,9 @@ struct PlayerView: View {
                         Haptics.impact(.light)
                         model.perform { try await model.toggleStar(track.id, kind: .song) }
                     } label: {
+                        // A fixed size: it sits in a fixed-width slot beside the title.
                         Image(systemName: starred ? "star.fill" : "star")
-                            .font(.title3)
+                            .font(.system(size: 22))
                             .foregroundStyle(starred ? Color.yellow : Color.white.opacity(0.8))
                             .frame(width: Theme.minTarget, height: Theme.minTarget)
                             .contentShape(Rectangle())

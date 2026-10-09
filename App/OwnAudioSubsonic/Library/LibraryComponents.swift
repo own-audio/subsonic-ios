@@ -198,9 +198,14 @@ struct PlayShuffleButtons: View {
     let isEnabled: Bool
     let play: () -> Void
     let shuffle: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(spacing: Theme.Spacing.md) {
+        // Side by side, the words break inside the buttons at accessibility text sizes.
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: Theme.Spacing.md))
+            : AnyLayout(HStackLayout(spacing: Theme.Spacing.md))
+        layout {
             Button {
                 Haptics.impact(.medium)
                 play()

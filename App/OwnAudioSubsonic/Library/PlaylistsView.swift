@@ -180,6 +180,7 @@ struct PlaylistDetailView: View {
                 .frame(width: 200, height: 200)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.cover))
             Text(playlist.name).font(.title2.bold()).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             if let comment = playlist.comment, !comment.isEmpty {
                 Text(comment).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
