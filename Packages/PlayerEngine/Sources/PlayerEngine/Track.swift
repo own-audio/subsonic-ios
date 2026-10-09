@@ -9,13 +9,19 @@ public struct Track: Identifiable, Sendable, Hashable, Codable {
     public let artist: String?
     public let album: String?
     public let durationSecs: Int?
+    /// Opaque, like `id`: whatever the app needs to find this track's cover.
+    public let artworkId: String?
 
-    public init(id: String, title: String, artist: String? = nil, album: String? = nil, durationSecs: Int? = nil) {
+    public init(
+        id: String, title: String, artist: String? = nil, album: String? = nil,
+        durationSecs: Int? = nil, artworkId: String? = nil
+    ) {
         self.id = id
         self.title = title
         self.artist = artist
         self.album = album
         self.durationSecs = durationSecs
+        self.artworkId = artworkId
     }
 }
 
