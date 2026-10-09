@@ -96,6 +96,10 @@ All notable changes to this project are documented here. The format follows
   ("1 skladba, 2 skladby, 5 skladeb") and the terms of the shared own.audio glossary. String
   catalogs: `Localizable.xcstrings`, `InfoPlist.xcstrings`.
 - UI test: the main screens in Czech, with screenshots.
+- Large text: Play and Shuffle stack at accessibility sizes, album and playlist titles wrap,
+  and the full player caps its text at the first accessibility size so its controls still
+  fit. UI test: the main screens at the largest size.
+- README for the public repository.
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
@@ -105,6 +109,9 @@ All notable changes to this project are documented here. The format follows
   `AVAudioEngine` playing fixture audio.
 
 ### Fixed
+
+- UI tests ran in the simulator's language, which broke them once the app had a Czech
+  translation; they now launch in English (the Czech test excepted).
 
 - "1 songs" and "1 albums" now read "1 song" and "1 album".
 
