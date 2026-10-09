@@ -231,6 +231,68 @@ struct SubsonicClientTests {
         #expect(await mock.firstQuery().first { $0.name == "id" }?.value == "pl-1")
     }
 
+    // MARK: - Favorites, ratings, scrobbling
+
+    @Test("star sends songs as id, albums as albumId, artists as artistId")
+    func starParameters() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in .init(statusCode: 200, body: Self.envelope()) }
+        try await client(mock).star(songIds: ["so-1"], albumIds: ["al-1"], artistIds: ["ar-1"])
+        let query = await mock.firstQuery()
+        #expect(await mock.requestLog().first?.url?.path == "/rest/star.view")
+        #expect(query.first { $0.name == "id" }?.value == "so-1")
+        #expect(query.first { $0.name == "albumId" }?.value == "al-1")
+        #expect(query.first { $0.name == "artistId" }?.value == "ar-1")
+    }
+
+    @Test("unstar uses its own endpoint")
+    func unstarEndpoint() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in .init(statusCode: 200, body: Self.envelope()) }
+        try await client(mock).unstar(songIds: ["so-1"])
+        #expect(await mock.requestLog().first?.url?.path == "/rest/unstar.view")
+    }
+
+    @Test("a rating is clamped to 0...5")
+    func ratingClamped() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in .init(statusCode: 200, body: Self.envelope()) }
+        try await client(mock).setRating(id: "so-1", rating: 9)
+        #expect(await mock.firstQuery().first { $0.name == "rating" }?.value == "5")
+    }
+
+    @Test("scrobble sends submission and the start time in milliseconds")
+    func scrobbleParameters() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in .init(statusCode: 200, body: Self.envelope()) }
+        try await client(mock).scrobble(songId: "so-1", submission: true, time: Date(timeIntervalSince1970: 1_700_000_000))
+        let query = await mock.firstQuery()
+        #expect(query.first { $0.name == "submission" }?.value == "true")
+        #expect(query.first { $0.name == "time" }?.value == "1700000000000")
+    }
+
+    @Test("starred decodes songs, albums and artists")
+    func starredDecodes() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#"""
+            "starred2":{"song":[{"id":"so-1","title":"A","starred":"2026-01-01T00:00:00Z","userRating":4}],"album":[{"id":"al-1","name":"B","songCount":3,"starred":"2026-01-01T00:00:00Z"}]}
+            """#))
+        }
+        let starred = try await client(mock).starred()
+        #expect(starred.songs.first?.starred != nil)
+        #expect(starred.songs.first?.userRating == 4)
+        #expect(starred.albums.count == 1)
+        #expect(starred.artists.isEmpty)
+    }
+
+    @Test("extensions are read by name; a classic server's error means none")
+    func extensions() async throws {
+        let open = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""openSubsonicExtensions":[{"name":"songLyrics","versions":[1,2]},{"name":"transcodeOffset","versions":[1]}]"#))
+        }
+        let classic = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""error":{"code":0,"message":"unknown"}"#, status: "failed"))
+        }
+        #expect(await client(open).openSubsonicExtensions() == ["songLyrics", "transcodeOffset"])
+        #expect(await client(classic).openSubsonicExtensions().isEmpty)
+    }
+
     // MARK: - Errors (HTTP 200 with status "failed")
 
     @Test("a failed write surfaces the server's code and message")

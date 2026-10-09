@@ -7,12 +7,15 @@ public struct Artist: Decodable, Identifiable, Sendable, Hashable {
     public let albumCount: Int
     /// A Navidrome extension, so optional: other servers don't send it.
     public let artistImageUrl: String?
+    /// When it was starred (an ISO 8601 timestamp), absent if it isn't.
+    public let starred: String?
 
-    public init(id: String, name: String, albumCount: Int, artistImageUrl: String?) {
+    public init(id: String, name: String, albumCount: Int, artistImageUrl: String?, starred: String? = nil) {
         self.id = id
         self.name = name
         self.albumCount = albumCount
         self.artistImageUrl = artistImageUrl
+        self.starred = starred
     }
 
     /// Navidrome signs artist images at `size=600`, about 50 KB for a tile that is at most 160
@@ -39,10 +42,15 @@ public struct Album: Decodable, Identifiable, Sendable, Hashable {
     public let duration: Int?
     public let coverArt: String?
     public let year: Int?
+    public let starred: String?
+    /// 1–5, absent if unrated.
+    public let userRating: Int?
+    public let playCount: Int?
 
     public init(
         id: String, name: String, artist: String?, artistId: String?, songCount: Int,
-        duration: Int?, coverArt: String?, year: Int?
+        duration: Int?, coverArt: String?, year: Int?, starred: String? = nil,
+        userRating: Int? = nil, playCount: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -52,6 +60,9 @@ public struct Album: Decodable, Identifiable, Sendable, Hashable {
         self.duration = duration
         self.coverArt = coverArt
         self.year = year
+        self.starred = starred
+        self.userRating = userRating
+        self.playCount = playCount
     }
 }
 
@@ -71,12 +82,17 @@ public struct Song: Decodable, Identifiable, Sendable, Hashable {
     public let coverArt: String?
     public let suffix: String?
     public let bitRate: Int?
+    public let starred: String?
+    /// 1–5, absent if unrated.
+    public let userRating: Int?
+    public let playCount: Int?
 
     public init(
         id: String, title: String, album: String? = nil, artist: String? = nil,
         albumId: String? = nil, artistId: String? = nil, track: Int? = nil, discNumber: Int? = nil,
         duration: Int? = nil, genre: String? = nil, coverArt: String? = nil,
-        suffix: String? = nil, bitRate: Int? = nil
+        suffix: String? = nil, bitRate: Int? = nil, starred: String? = nil,
+        userRating: Int? = nil, playCount: Int? = nil
     ) {
         self.id = id
         self.title = title
@@ -91,6 +107,9 @@ public struct Song: Decodable, Identifiable, Sendable, Hashable {
         self.coverArt = coverArt
         self.suffix = suffix
         self.bitRate = bitRate
+        self.starred = starred
+        self.userRating = userRating
+        self.playCount = playCount
     }
 }
 
@@ -178,6 +197,9 @@ struct AlbumPayload: Decodable {
         let duration: Int?
         let coverArt: String?
         let year: Int?
+        let starred: String?
+        let userRating: Int?
+        let playCount: Int?
         let song: [Song]?
     }
     let album: AlbumDetail
@@ -217,4 +239,30 @@ struct PlaylistPayload: Decodable {
 
 struct CreatePlaylistPayload: Decodable {
     let playlist: Playlist
+}
+
+/// Everything the user has starred (`getStarred2`).
+public struct StarredResult: Sendable {
+    public let artists: [Artist]
+    public let albums: [Album]
+    public let songs: [Song]
+
+    public var isEmpty: Bool { artists.isEmpty && albums.isEmpty && songs.isEmpty }
+}
+
+struct StarredPayload: Decodable {
+    struct Starred: Decodable {
+        let artist: [Artist]?
+        let album: [Album]?
+        let song: [Song]?
+    }
+    let starred2: Starred
+}
+
+struct ExtensionsPayload: Decodable {
+    struct Extension: Decodable {
+        let name: String
+        let versions: [Int]
+    }
+    let openSubsonicExtensions: [Extension]?
 }

@@ -103,7 +103,8 @@ public struct SubsonicClient: Sendable {
         let album = Album(
             id: payload.album.id, name: payload.album.name, artist: payload.album.artist,
             artistId: payload.album.artistId, songCount: payload.album.song?.count ?? 0,
-            duration: payload.album.duration, coverArt: payload.album.coverArt, year: payload.album.year
+            duration: payload.album.duration, coverArt: payload.album.coverArt, year: payload.album.year,
+            starred: payload.album.starred, userRating: payload.album.userRating, playCount: payload.album.playCount
         )
         return (album, payload.album.song ?? [])
     }
@@ -165,6 +166,56 @@ public struct SubsonicClient: Sendable {
 
     public func deletePlaylist(id: String) async throws {
         let _: SubsonicStatus = try await get("deletePlaylist", query: [URLQueryItem(name: "id", value: id)])
+    }
+
+    // MARK: - Favorites, ratings, scrobbling
+
+    public func starred() async throws -> StarredResult {
+        let payload: StarredPayload = try await get("getStarred2")
+        let s = payload.starred2
+        return StarredResult(artists: s.artist ?? [], albums: s.album ?? [], songs: s.song ?? [])
+    }
+
+    public func star(songIds: [String] = [], albumIds: [String] = [], artistIds: [String] = []) async throws {
+        let _: SubsonicStatus = try await get("star", query: Self.starQuery(songIds, albumIds, artistIds))
+    }
+
+    public func unstar(songIds: [String] = [], albumIds: [String] = [], artistIds: [String] = []) async throws {
+        let _: SubsonicStatus = try await get("unstar", query: Self.starQuery(songIds, albumIds, artistIds))
+    }
+
+    /// `rating` 1–5, or 0 to clear it. Works for songs and albums alike.
+    public func setRating(id: String, rating: Int) async throws {
+        let _: SubsonicStatus = try await get("setRating", query: [
+            URLQueryItem(name: "id", value: id),
+            URLQueryItem(name: "rating", value: String(min(max(rating, 0), 5))),
+        ])
+    }
+
+    /// `submission: false` is "now playing"; `true` counts a play. `time` is when listening
+    /// started, which matters for plays submitted late (after being offline).
+    public func scrobble(songId: String, submission: Bool, time: Date? = nil) async throws {
+        var query = [
+            URLQueryItem(name: "id", value: songId),
+            URLQueryItem(name: "submission", value: submission ? "true" : "false"),
+        ]
+        if let time {
+            query.append(URLQueryItem(name: "time", value: String(Int64(time.timeIntervalSince1970 * 1000))))
+        }
+        let _: SubsonicStatus = try await get("scrobble", query: query)
+    }
+
+    /// The OpenSubsonic extensions the server supports, by name. Empty for a classic Subsonic
+    /// server, which answers this endpoint with an error.
+    public func openSubsonicExtensions() async -> Set<String> {
+        guard let payload: ExtensionsPayload = try? await get("getOpenSubsonicExtensions") else { return [] }
+        return Set((payload.openSubsonicExtensions ?? []).map(\.name))
+    }
+
+    private static func starQuery(_ songIds: [String], _ albumIds: [String], _ artistIds: [String]) -> [URLQueryItem] {
+        songIds.map { URLQueryItem(name: "id", value: $0) }
+            + albumIds.map { URLQueryItem(name: "albumId", value: $0) }
+            + artistIds.map { URLQueryItem(name: "artistId", value: $0) }
     }
 
     // MARK: - URLs for the player and image loading

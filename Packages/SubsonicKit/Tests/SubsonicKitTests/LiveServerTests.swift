@@ -77,7 +77,60 @@ struct LiveServerTests {
         #expect(looksLikeAudio, "not a known audio container: \(magic.prefix(4))")
     }
 
-    /// The only test that writes. It cleans up after itself even on failure, and the name makes
+    @Test("the server lists its OpenSubsonic extensions")
+    func extensionsLive() async throws {
+        // Informational: a classic server has none, Navidrome has several.
+        let extensions = await try makeClient().openSubsonicExtensions()
+        print("extensions:", extensions.sorted())
+    }
+
+    /// Writes, then puts back exactly what was there.
+    @Test("star and rate a song, then restore it")
+    func starAndRateRoundTrip() async throws {
+        let api = try makeClient()
+        let target = try #require(try await api.albumList(size: 10).first { $0.songCount > 0 })
+        let original = try #require(try await api.album(id: target.id).songs.first)
+        do {
+            if original.starred == nil {
+                try await api.star(songIds: [original.id])
+                #expect(try await api.song(id: original.id).starred != nil)
+                #expect(try await api.starred().songs.contains { $0.id == original.id })
+            } else {
+                try await api.unstar(songIds: [original.id])
+                #expect(try await api.song(id: original.id).starred == nil)
+            }
+            let newRating = (original.userRating ?? 0) == 3 ? 4 : 3
+            try await api.setRating(id: original.id, rating: newRating)
+            #expect(try await api.song(id: original.id).userRating == newRating)
+        } catch {
+            try? await restore(original, api: api)
+            throw error
+        }
+        try await restore(original, api: api)
+        let after = try await api.song(id: original.id)
+        #expect((after.starred == nil) == (original.starred == nil))
+        #expect((after.userRating ?? 0) == (original.userRating ?? 0))
+    }
+
+    /// Only "now playing": a counted play would change the library's play counts.
+    @Test("now playing is accepted")
+    func nowPlayingLive() async throws {
+        let api = try makeClient()
+        let target = try #require(try await api.albumList(size: 10).first { $0.songCount > 0 })
+        let song = try #require(try await api.album(id: target.id).songs.first)
+        try await api.scrobble(songId: song.id, submission: false)
+    }
+
+    private func restore(_ original: Song, api: SubsonicClient) async throws {
+        if original.starred == nil {
+            try await api.unstar(songIds: [original.id])
+        } else {
+            try await api.star(songIds: [original.id])
+        }
+        try await api.setRating(id: original.id, rating: original.userRating ?? 0)
+    }
+
+    /// The only other test that writes. It cleans up after itself even on failure, and the name makes
     /// a leftover from a crashed run easy to spot and delete.
     @Test("playlist create, add, remove, delete")
     func playlistRoundTrip() async throws {
