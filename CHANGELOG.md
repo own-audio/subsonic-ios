@@ -90,6 +90,12 @@ All notable changes to this project are documented here. The format follows
   CarPlay screen (see Known issues).
 - The app model is one shared instance and loads once, whether the phone UI or CarPlay starts
   the app.
+- iPad: a sidebar (iOS's adaptable tab style), the four-column album grid and the player's
+  centred column; both UI tests pass on an iPad Air simulator.
+- Czech localization of the whole app, including the engine's strings, with Czech plurals
+  ("1 skladba, 2 skladby, 5 skladeb") and the terms of the shared own.audio glossary. String
+  catalogs: `Localizable.xcstrings`, `InfoPlist.xcstrings`.
+- UI test: the main screens in Czech, with screenshots.
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
