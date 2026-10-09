@@ -198,6 +198,11 @@ public final class PlaybackEngine {
     private var consecutiveLoadFailures = 0
     private static let maxConsecutiveLoadFailures = 3
 
+    /// Offline: only tracks already on the device play, and the rest are passed over without
+    /// asking the network. Trying each one would mean a wait and an error per track, and after
+    /// three of those the queue stops.
+    public var requiresLocalFiles = false
+
     // MARK: - Streaming
 
     /// The network fetch for whatever track is currently *streaming* (not yet a local file).
@@ -669,6 +674,10 @@ public final class PlaybackEngine {
     // MARK: - File loading
 
     private func loadAndPlay(track: Track, seekTo: Double = 0) async {
+        if requiresLocalFiles, await fileCache.existingLocalURL(trackId: track.id) == nil {
+            await playNextLocalTrack()
+            return
+        }
         applyGain(for: track, on: activeNode)
         currentTrack = track
         duration = Double(track.durationSecs ?? 0)
@@ -747,6 +756,27 @@ public final class PlaybackEngine {
         } catch {
             handleLoadFailure(loc("Could not load this track."))
         }
+    }
+
+    /// Moves through the queue to the next track that is on the device. With none left, stops
+    /// and says why.
+    private func playNextLocalTrack() async {
+        guard var queue else { return }
+        while let candidate = queue.advance() {
+            if await fileCache.existingLocalURL(trackId: candidate.id) != nil {
+                self.queue = queue
+                await loadAndPlay(track: candidate)
+                return
+            }
+        }
+        stop()
+        errorMessage = loc("Offline, and none of the songs left in the queue are downloaded.")
+    }
+
+    /// Whether to fetch `track` ahead of time: not offline unless it is already on the device.
+    private func shouldPrefetch(_ track: Track) async -> Bool {
+        guard requiresLocalFiles else { return true }
+        return await fileCache.existingLocalURL(trackId: track.id) != nil
     }
 
     /// The "start audible playback" sequence every load path (file, streamed, and the ALAC
@@ -989,7 +1019,10 @@ public final class PlaybackEngine {
     private func prefetchNextTrackForCrossfade() {
         prefetchNextTask?.cancel()
         guard let next = queue?.trackAfterCurrent(repeatMode: repeatMode) else { return }
-        prefetchNextTask = Task { await fileCache.prefetch(trackId: next.id) }
+        prefetchNextTask = Task {
+            guard await shouldPrefetch(next) else { return }
+            await fileCache.prefetch(trackId: next.id)
+        }
     }
 
     /// Gapless mode only — resolves and schedules the *next* track onto the active node's
@@ -1001,7 +1034,7 @@ public final class PlaybackEngine {
         prefetchNextTask?.cancel()
         guard let next = queue?.trackAfterCurrent(repeatMode: repeatMode) else { return }
         prefetchNextTask = Task { [weak self] in
-            guard let self else { return }
+            guard let self, await shouldPrefetch(next) else { return }
             guard let url = try? await fileCache.localURL(trackId: next.id) else { return }
             guard let file = try? AVAudioFile(forReading: url) else { return }
             guard !Task.isCancelled, let lastBoundary = boundaries.last, lastBoundary.trackId == currentTrack?.id else { return }

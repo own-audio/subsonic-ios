@@ -23,6 +23,7 @@ struct PlaybackEngineStreamingTests {
         let engine: PlaybackEngine
         let streamRequestLog: MockURLProtocol.StubbedSession
         let settings: PlaybackSettingsStore
+        let fileCache: TrackFileCache
     }
 
     /// `failingTrackIds` answer 404.
@@ -50,7 +51,7 @@ struct PlaybackEngineStreamingTests {
             equalizerStore: EqualizerStore(defaults: UserDefaults(suiteName: "test.engine.eq.\(suffix)")!),
             resumeStore: InMemoryResumeStore()
         )
-        return Harness(engine: engine, streamRequestLog: mock, settings: settings)
+        return Harness(engine: engine, streamRequestLog: mock, settings: settings, fileCache: fileCache)
     }
 
     private func makeTrack(id: String = "track-1", durationSecs: Int = 3) -> Track {
@@ -138,6 +139,37 @@ struct PlaybackEngineStreamingTests {
 
         #expect(!engine.isPlaying)
         #expect(engine.errorMessage == "Could not play this track.")
+    }
+
+    @Test("offline, tracks not on the device are passed over without a request")
+    func offlineSkipsTracksNotOnDevice() async throws {
+        let harness = try await makeHarness(suffix: "offline", audioData: Data())
+        let local = FileManager.default.temporaryDirectory.appendingPathComponent("offline-\(UUID().uuidString).mp3")
+        try fixtureData("test-tone.mp3").write(to: local)
+        await harness.fileCache.setLocalFileLookup { $0 == "track-local" ? local : nil }
+        let engine = harness.engine
+        engine.requiresLocalFiles = true
+
+        await engine.play(tracks: [makeTrack(id: "track-remote"), makeTrack(id: "track-local"), makeTrack(id: "track-remote-2")])
+        try await waitUntil(timeout: 5) { engine.isPlaying }
+
+        #expect(engine.currentTrack?.id == "track-local")
+        #expect(await harness.streamRequestLog.requestLog().isEmpty)
+        engine.stop()
+    }
+
+    @Test("offline, a queue with nothing on the device stops and says why")
+    func offlineWithNothingLocalStops() async throws {
+        let harness = try await makeHarness(suffix: "offline-none", audioData: Data())
+        let engine = harness.engine
+        engine.requiresLocalFiles = true
+
+        await engine.play(tracks: [makeTrack(id: "a"), makeTrack(id: "b")])
+
+        #expect(!engine.isPlaying)
+        #expect(engine.currentTrack == nil)
+        #expect(engine.errorMessage == "Offline, and none of the songs left in the queue are downloaded.")
+        #expect(await harness.streamRequestLog.requestLog().isEmpty)
     }
 
     /// Reproduces a real crash: a server-saved position past the end of the decoded file (the

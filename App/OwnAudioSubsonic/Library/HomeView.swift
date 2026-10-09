@@ -40,16 +40,23 @@ struct HomeView: View {
                             albumShelf("Recently Played", albums: recent, route: .albums(.recent))
                         }
                         if !newest.isEmpty {
-                            albumShelf("Recently Added", albums: newest, route: .albums(.newest))
+                            albumShelf(model.isOffline ? "Downloaded Albums" : "Recently Added", albums: newest, route: .albums(.newest))
                         }
                         if !playlists.isEmpty {
                             playlistShelf
                         }
                         if recent.isEmpty, newest.isEmpty, playlists.isEmpty {
-                            ContentUnavailableView(
-                                "No Music Yet", systemImage: "music.note",
-                                description: Text("This server's library is empty.")
-                            )
+                            if model.isOffline {
+                                ContentUnavailableView(
+                                    "Nothing Downloaded", systemImage: "arrow.down.circle",
+                                    description: Text("Download albums and playlists to listen without a network.")
+                                )
+                            } else {
+                                ContentUnavailableView(
+                                    "No Music Yet", systemImage: "music.note",
+                                    description: Text("This server's library is empty.")
+                                )
+                            }
                         }
                     }
                 }
@@ -62,6 +69,14 @@ struct HomeView: View {
         .toolbar {
             if model.servers.count > 1 {
                 ToolbarItem(placement: .topBarLeading) { serverMenu }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                @Bindable var model = model
+                Toggle(isOn: $model.downloadedOnly) {
+                    Label("Offline Mode", systemImage: model.downloadedOnly ? "wifi.slash" : "wifi")
+                }
+                .toggleStyle(.button)
+                .accessibilityIdentifier("home.downloadedOnly")
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -84,7 +99,7 @@ struct HomeView: View {
             }
         }
         .refreshable { await load() }
-        .task { await load() }
+        .task(id: model.isOffline) { await load() }
     }
 
     /// With more than one server, which one the library shows is a tap away.
@@ -153,6 +168,13 @@ struct HomeView: View {
 
     private func load() async {
         guard let client = model.activeClient else { return }
+        if model.isOffline {
+            recent = []
+            newest = Array(model.offlineAlbumsByDownloadDate.prefix(20))
+            playlists = model.offlinePlaylists
+            state = .loaded(())
+            return
+        }
         do {
             async let recentAlbums = client.albumList(.recent, size: 20)
             async let newestAlbums = client.albumList(.newest, size: 20)
@@ -170,6 +192,10 @@ struct HomeView: View {
     private func shuffleAll() {
         guard let client = model.activeClient else { return }
         Haptics.impact(.medium)
+        if model.isOffline {
+            model.play(model.offlineSongs, shuffled: true, containerId: "shuffle-all")
+            return
+        }
         isShuffling = true
         Task {
             defer { isShuffling = false }

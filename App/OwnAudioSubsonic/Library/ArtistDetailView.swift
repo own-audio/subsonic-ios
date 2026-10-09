@@ -51,7 +51,7 @@ struct ArtistDetailView: View {
             // The artist list says whether it is starred; remember that for the button.
             if artist.starred != nil, let id = model.compositeId(artist.id) { model.noteStarred(id) }
         }
-        .task { await load() }
+        .task(id: model.isOffline) { await load() }
     }
 
     private var albums: [Album]? {
@@ -59,6 +59,10 @@ struct ArtistDetailView: View {
     }
 
     private func load() async {
+        if model.isOffline {
+            state = .loaded(model.offlineAlbums(artist: artist))
+            return
+        }
         guard let client = model.activeClient else { return }
         do {
             state = .loaded(try await client.artist(id: artist.id).albums)
@@ -70,6 +74,11 @@ struct ArtistDetailView: View {
     /// Fetches every album's songs, so this costs one request per album.
     private func playAll(shuffled: Bool) {
         guard let albums, let client = model.activeClient else { return }
+        if model.isOffline {
+            let ids = Set(albums.map(\.id))
+            model.play(model.offlineSongs.filter { $0.albumId.map(ids.contains) ?? false }, shuffled: shuffled, containerId: "artist:\(artist.id)")
+            return
+        }
         isStarting = true
         Task {
             defer { isStarting = false }

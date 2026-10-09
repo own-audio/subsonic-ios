@@ -65,7 +65,9 @@ struct SearchView: View {
             } else if !isSearching {
                 ContentUnavailableView(
                     "Search Your Library", systemImage: "magnifyingglass",
-                    description: Text("Artists, albums and songs on \(model.activeServer?.displayName ?? "")")
+                    description: model.isOffline
+                        ? Text("Artists, albums and songs you've downloaded")
+                        : Text("Artists, albums and songs on \(model.activeServer?.displayName ?? "")")
                 )
                 .listRowSeparator(.hidden)
             }
@@ -75,13 +77,18 @@ struct SearchView: View {
         .navigationTitle("Search")
         .searchable(text: $query, prompt: "Artists, Albums, Songs")
         .autocorrectionDisabled()
-        .task(id: query) { await search() }
+        .task(id: "\(model.isOffline)|\(query)") { await search() }
     }
 
     private func search() async {
         let text = query.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty else {
             result = nil
+            errorMessage = nil
+            return
+        }
+        if model.isOffline {
+            result = model.offlineSearch(text)
             errorMessage = nil
             return
         }

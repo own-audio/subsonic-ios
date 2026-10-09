@@ -27,6 +27,11 @@ struct RootView: View {
         } message: {
             Text(model.actionError ?? "")
         }
+        // The player stopped on its own with nothing loaded, e.g. offline with nothing
+        // downloaded left in the queue: the full player isn't there to show why.
+        .onChange(of: model.engine.errorMessage) { _, message in
+            if let message, model.engine.currentTrack == nil { model.actionError = message }
+        }
     }
 
     private var tabs: some View {
@@ -112,10 +117,39 @@ private struct LibraryTab: View {
     }
 }
 
+/// A line above the mini player while the app is offline, so a shorter library isn't a mystery.
+private struct OfflineBanner: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.isOffline {
+            HStack(spacing: Theme.Spacing.sm) {
+                Image(systemName: "wifi.slash")
+                Text(model.isOfflineByChoice ? "Offline mode · downloaded music only" : "No network · downloaded music only")
+                Spacer(minLength: 0)
+                if model.isOfflineByChoice {
+                    Button("Turn Off") { model.downloadedOnly = false }
+                        .font(.footnote.weight(.semibold))
+                }
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.sm)
+            .background(.bar)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("offline.banner")
+        }
+    }
+}
+
 private extension View {
     func miniPlayerInset(onTap: @escaping () -> Void) -> some View {
         safeAreaInset(edge: .bottom, spacing: 0) {
-            MiniPlayerBar(onTap: onTap)
+            VStack(spacing: 0) {
+                OfflineBanner()
+                MiniPlayerBar(onTap: onTap)
+            }
         }
     }
 }

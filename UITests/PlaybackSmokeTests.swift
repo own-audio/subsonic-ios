@@ -128,6 +128,65 @@ final class PlaybackSmokeTests: XCTestCase {
         screenshot(app, "13-offline-player")
     }
 
+    /// The case that used to hang: an album with only some songs downloaded, played with no
+    /// network. Downloads the second song alone, goes offline, opens the album from the offline
+    /// library and taps Play: the first song is passed over and the downloaded one plays.
+    func testPartlyDownloadedAlbumPlaysOffline() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"] + Self.english
+        app.launch()
+        addServer(app, screenshots: false)
+        openTab(app, Self.libraryTab)
+        let albums = app.buttons["library.albums"]
+        XCTAssertTrue(albums.waitForExistence(timeout: 20))
+        albums.tap()
+
+        // The first album with at least two songs.
+        let rows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'album.song.'"))
+        var found = false
+        for index in 0..<8 {
+            let tile = app.scrollViews.buttons.element(boundBy: index)
+            XCTAssertTrue(tile.waitForExistence(timeout: 20))
+            tile.tap()
+            XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 20))
+            if rows.count >= 2 { found = true; break }
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+        }
+        XCTAssertTrue(found, "no album with two or more songs among the first eight")
+        let second = rows.element(boundBy: 1)
+        let secondTitle = String(second.identifier.dropFirst("album.song.".count))
+        second.press(forDuration: 1.0)
+        // The menu's Download, not the toolbar's whole-album one.
+        let download = app.buttons.matching(NSPredicate(format: "label == 'Download' AND identifier != 'download.start'")).firstMatch
+        XCTAssertTrue(download.waitForExistence(timeout: 5))
+        download.tap()
+        XCTAssertTrue(
+            waitUntil(timeout: 120) { second.label.contains("Downloaded") },
+            "the second song should finish downloading"
+        )
+
+        app.terminate()
+        app.launchArguments = ["-simulateOffline"] + Self.english
+        app.launch()
+
+        XCTAssertTrue(app.descendants(matching: .any)["offline.banner"].waitForExistence(timeout: 15))
+        screenshot(app, "14-offline-home")
+        openAlbum(app, named: nil, screenshots: false)
+
+        let play = app.buttons["detail.play"]
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
+        XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled })
+        screenshot(app, "15-offline-album")
+        play.tap()
+
+        let miniPlayPause = app.buttons["miniPlayer.playPause"]
+        XCTAssertTrue(
+            waitUntil(timeout: 15) { miniPlayPause.exists && miniPlayPause.label == "Pause" },
+            "the downloaded song should play with no server"
+        )
+        XCTAssertTrue(app.buttons["miniPlayer"].label.contains(secondTitle), "playback should start at the downloaded song")
+    }
+
     /// Needs an album whose first song has ReplayGain tags (track gain -6.5 dB) and synced
     /// lyrics: `TEST_RUNNER_SUBSONIC_LYRICS_ALBUM`. Skipped without it; the real servers used for
     /// testing have neither, so this runs against a local Navidrome with a generated album.
@@ -282,7 +341,12 @@ final class PlaybackSmokeTests: XCTestCase {
     private func openTab(_ app: XCUIApplication, _ labels: [String]) {
         let tab = app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
         XCTAssertTrue(tab.waitForExistence(timeout: 10))
-        tab.tap()
+        // Right after the first screen gives way to the tabs, a tap can land before the tab bar
+        // takes it; try again until the tab reports itself selected.
+        for _ in 0..<3 {
+            tab.tap()
+            if waitUntil(timeout: 3, { tab.isSelected }) { return }
+        }
     }
 
     /// iOS offers to save the password after a sign-in form. It's the system's sheet, in the

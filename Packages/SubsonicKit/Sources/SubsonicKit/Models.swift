@@ -210,6 +210,12 @@ public struct SearchResult: Sendable {
     public let albums: [Album]
     public let songs: [Song]
 
+    public init(artists: [Artist], albums: [Album], songs: [Song]) {
+        self.artists = artists
+        self.albums = albums
+        self.songs = songs
+    }
+
     public var isEmpty: Bool { artists.isEmpty && albums.isEmpty && songs.isEmpty }
 }
 

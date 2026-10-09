@@ -14,6 +14,7 @@
 #   OWNAUDIO_DOWNLOAD_ALBUM="a small album"           # optional
 #
 # Usage: scripts/test-servers.sh [navidrome|ownaudio] [--live-only]
+# One UI test only: ONLY_TESTING=testPartlyDownloadedAlbumPlaysOffline scripts/test-servers.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source ./test-servers.local.env
@@ -37,7 +38,8 @@ run() { # name host user password download-album lyrics-album
   TEST_RUNNER_SUBSONIC_DOWNLOAD_ALBUM="$album" TEST_RUNNER_SUBSONIC_LYRICS_ALBUM="$lyrics" \
   TEST_RUNNER_SCREENSHOT_DIR="$OUT/$name" \
     xcodebuild test -project OwnAudioSubsonic.xcodeproj -scheme OwnAudioSubsonic -destination "id=$SIM" \
-      -derivedDataPath "$OUT/DerivedData" -test-timeouts-enabled YES -default-test-execution-time-allowance 420 2>&1 \
+      -derivedDataPath "$OUT/DerivedData" -test-timeouts-enabled YES -default-test-execution-time-allowance 420 \
+      ${ONLY_TESTING:+-only-testing:"OwnAudioSubsonicUITests/PlaybackSmokeTests/$ONLY_TESTING"} 2>&1 \
     | grep -E "Test Case.*(passed|failed)|\*\* TEST"
 }
 

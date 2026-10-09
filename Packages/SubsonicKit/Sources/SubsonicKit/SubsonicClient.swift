@@ -14,6 +14,8 @@ public struct SubsonicClient: Sendable {
         case server(code: Int, message: String)
         case decoding
         case network
+        /// Offline, and this wasn't saved from an earlier visit.
+        case offline
     }
 
     public let host: URL
@@ -21,6 +23,8 @@ public struct SubsonicClient: Sendable {
     private let password: String
     private let clientName: String
     private let session: URLSession
+    private let cache: ResponseCache?
+    private let offline: OfflineSwitch?
 
     /// Servers use the version only to decide which optional fields to send; none reject an
     /// older one.
@@ -28,13 +32,16 @@ public struct SubsonicClient: Sendable {
 
     public init(
         host: URL, username: String, password: String,
-        clientName: String = "own.audio-subsonic", session: URLSession = .shared
+        clientName: String = "own.audio-subsonic", session: URLSession = .shared,
+        cache: ResponseCache? = nil, offline: OfflineSwitch? = nil
     ) {
         self.host = host
         self.username = username
         self.password = password
         self.clientName = clientName
         self.session = session
+        self.cache = cache
+        self.offline = offline
     }
 
     /// Accepts "host", "host:port" or a full URL. Defaults to http because most home servers
@@ -296,17 +303,49 @@ public struct SubsonicClient: Sendable {
 
     // MARK: - Transport
 
+    /// Reads whose answers are kept for offline use. Search and random picks are left out: an
+    /// old answer to those would be misleading rather than useful.
+    static let cachedActions: Set<String> = [
+        "getArtists", "getArtist", "getAlbumList2", "getAlbum", "getSong", "getGenres",
+        "getPlaylists", "getPlaylist", "getStarred2", "getLyrics", "getLyricsBySongId",
+        "getOpenSubsonicExtensions",
+    ]
+
+    /// The request without the per-request salt and token, so the same question maps to the same
+    /// saved answer.
+    func cacheKey(path: String, query: [URLQueryItem]) -> String {
+        let params = query.map { "\($0.name)=\($0.value ?? "")" }.sorted().joined(separator: "&")
+        return "\(host.absoluteString)|\(username)|\(path)?\(params)"
+    }
+
+    /// Offline, a saved answer or `.offline` without touching the network. Online, a network
+    /// failure falls back to the saved answer, so a connection that is there but goes nowhere
+    /// still shows what was seen before.
     private func get<T: Decodable>(_ path: String, query: [URLQueryItem] = []) async throws -> T {
+        let key = cache != nil && Self.cachedActions.contains(path) ? cacheKey(path: path, query: query) : nil
+        let saved = { key.flatMap { cache?.data(forKey: $0) } }
+        if offline?.isOn == true {
+            guard let data = saved() else { throw SubsonicError.offline }
+            return try decode(data)
+        }
+
         let url = buildURL(path: path, query: query)
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await session.data(for: URLRequest(url: url))
         } catch {
+            if let data = saved() { return try decode(data) }
             throw SubsonicError.network
         }
         guard let http = response as? HTTPURLResponse else { throw SubsonicError.network }
         guard (200..<300).contains(http.statusCode) else { throw SubsonicError.http(http.statusCode) }
 
+        let decoded: T = try decode(data)
+        if let key { cache?.store(data, forKey: key) }
+        return decoded
+    }
+
+    private func decode<T: Decodable>(_ data: Data) throws -> T {
         let decoder = JSONDecoder()
         guard let envelope = try? decoder.decode(SubsonicEnvelope<SubsonicStatus>.self, from: data) else {
             throw SubsonicError.decoding

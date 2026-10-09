@@ -34,6 +34,13 @@ struct SettingsView: View {
                 } label: {
                     LabeledContent("Downloads", value: ByteCountFormatter.string(fromByteCount: model.downloads.totalBytes, countStyle: .file))
                 }
+                Toggle("Offline Mode", isOn: Binding(
+                    get: { model.downloadedOnly },
+                    set: { model.downloadedOnly = $0 }
+                ))
+                .accessibilityIdentifier("settings.downloadedOnly")
+            } footer: {
+                Text("Shows and plays only what is on this iPhone, as it does on its own with no network. Saves mobile data.")
             }
 
             CrossfadeSettings(settings: model.playbackSettings)

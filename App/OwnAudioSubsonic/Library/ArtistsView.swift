@@ -31,10 +31,14 @@ struct ArtistsView: View {
         }
         .navigationTitle("Artists")
         .refreshable { await load() }
-        .task { await load() }
+        .task(id: model.isOffline) { await load() }
     }
 
     private func load() async {
+        if model.isOffline {
+            state = .loaded(model.offlineArtists)
+            return
+        }
         guard let client = model.activeClient else { return }
         do {
             state = .loaded(try await client.artists())

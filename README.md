@@ -5,7 +5,7 @@ Airsonic, LMS, Ampache, own.audio and others. Swift and SwiftUI, no web views.
 
 - Gapless playback and crossfade, on AVAudioEngine
 - Streams while it downloads, with its own Core Audio decoder
-- Downloads for offline listening
+- Downloads and an offline mode: with no network it shows and plays what is on the phone
 - Synced lyrics, volume leveling (ReplayGain), equalizer
 - Favorites, ratings, playlists, scrobbling
 - Several servers at once, iPad; CarPlay is built but not yet tried in a car

@@ -124,10 +124,16 @@ struct SongsView: View {
         }
         .navigationTitle("Songs")
         .refreshable { await reload() }
-        .task { await reload() }
+        .task(id: model.isOffline) { await reload() }
     }
 
     private func reload() async {
+        if model.isOffline {
+            songs = model.offlineSongs
+            reachedEnd = true
+            state = .loaded(())
+            return
+        }
         guard let client = model.activeClient else { return }
         do {
             let page = try await client.songs(size: Self.pageSize)
@@ -183,10 +189,14 @@ struct GenresView: View {
         }
         .navigationTitle("Genres")
         .refreshable { await load() }
-        .task { await load() }
+        .task(id: model.isOffline) { await load() }
     }
 
     private func load() async {
+        if model.isOffline {
+            state = .loaded(model.offlineGenres)
+            return
+        }
         guard let client = model.activeClient else { return }
         do {
             state = .loaded(try await client.genres())
@@ -223,10 +233,14 @@ struct GenreView: View {
             .padding(.vertical, Theme.Spacing.md)
         }
         .navigationTitle(genre.value)
-        .task { await load() }
+        .task(id: model.isOffline) { await load() }
     }
 
     private func load() async {
+        if model.isOffline {
+            state = .loaded(model.offlineAlbums(genre: genre.value))
+            return
+        }
         guard let client = model.activeClient else { return }
         do {
             state = .loaded(try await client.albums(genre: genre.value, size: 200))
@@ -237,6 +251,10 @@ struct GenreView: View {
 
     private func shuffle() {
         guard let client = model.activeClient else { return }
+        if model.isOffline {
+            model.play(model.offlineSongs(genre: genre.value), shuffled: true, containerId: "genre:\(genre.value)")
+            return
+        }
         isShuffling = true
         Task {
             defer { isShuffling = false }

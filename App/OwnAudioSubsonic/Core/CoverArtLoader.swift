@@ -1,4 +1,5 @@
 import Foundation
+import SubsonicKit
 import UIKit
 
 /// Cover art, cached in memory and on disk.
@@ -7,12 +8,14 @@ import UIKit
 /// image never has the same URL twice. The cache key is the server, the cover id and the size.
 actor CoverArtLoader {
     private let registry: ClientRegistry
+    private let offline: OfflineSwitch?
     private let memory = NSCache<NSString, UIImage>()
     private let directory: URL
     private var inFlight: [String: Task<UIImage?, Never>] = [:]
 
-    init(registry: ClientRegistry) {
+    init(registry: ClientRegistry, offline: OfflineSwitch? = nil) {
         self.registry = registry
+        self.offline = offline
         directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("covers", isDirectory: true)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -48,7 +51,8 @@ actor CoverArtLoader {
             memory.setObject(image, forKey: key as NSString)
             return image
         }
-        guard let (serverId, coverId) = TrackID.parse(artworkId),
+        guard offline?.isOn != true,
+              let (serverId, coverId) = TrackID.parse(artworkId),
               let client = await registry.client(for: serverId),
               let (data, response) = try? await URLSession.shared.data(from: client.coverURL(id: coverId, size: size)),
               (response as? HTTPURLResponse)?.statusCode == 200,

@@ -26,6 +26,30 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Offline mode. With no network, or with Offline Mode on (a button on Home and a switch in
+  Settings), the app shows and plays only what is downloaded:
+  - Home lists the downloaded albums and playlists; Shuffle All shuffles the downloads.
+    Library's Artists, Albums, Songs and Genres, and Search, are built from the downloads.
+  - Albums, playlists and favorites opened before open again from a saved copy, with
+    the songs that aren't downloaded greyed out. Never opened, a downloaded album or playlist
+    still shows its downloaded songs.
+  - Playing an album or playlist queues only its downloaded songs; tapping one that isn't
+    downloaded starts at the next one that is. If the network goes while playing, the player
+    passes over songs that aren't downloaded instead of trying each one.
+  - A line above the mini player says the app is offline. Starring, rating and playlist edits
+    say "Not available offline." Covers come from the cover cache only.
+- `SubsonicKit`: `ResponseCache` / `DiskResponseCache` keep the answers to read requests
+  (artists, albums, playlists, favorites, genres, lyrics), and `OfflineSwitch` makes the client
+  answer from them without the network. A failed request falls back to the saved answer too, so
+  a Wi-Fi with no internet still shows what was seen before. New error `.offline`.
+- `PlayerEngine`: `requiresLocalFiles` passes over tracks with no local file and doesn't fetch
+  the next track ahead; with none left it stops with a message.
+- UI test `testPartlyDownloadedAlbumPlaysOffline`: one song of an album downloaded, then
+  offline, Play starts at that song. `ONLY_TESTING=<test>` in `scripts/test-servers.sh` runs one
+  UI test.
+
+### Added
+
 - Songs: every song, a page at a time, with Play and Shuffle. Genres: each genre's albums and a
   shuffle across its songs. `SubsonicKit`: `genres()`, `albums(genre:)`, `songs(size:offset:)`
   (an empty `search3`), `randomSongs(size:genre:)`.
@@ -146,6 +170,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Offline, playing an album or playlist that was only partly downloaded seemed to hang: each
+  song that wasn't downloaded waited for the network, up to a minute, and after three such
+  songs the player stopped. Requests and streams now give up after 15 seconds, and offline the
+  player doesn't try them at all.
+- UI tests: a tab tap right after the first screen could be lost; the tab helper now checks the
+  tab got selected and taps again.
 - Paging all songs stops when a page brings nothing new: the own.audio server ignores
   `songOffset` in `search3` and returns the first page every time (recorded as a known issue
   in the live tests until the server is fixed).

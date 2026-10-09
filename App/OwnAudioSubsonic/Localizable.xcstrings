@@ -340,6 +340,16 @@
         }
       }
     },
+    "Artists, albums and songs you've downloaded" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interpreti, alba a skladby, které máte stažené"
+          }
+        }
+      }
+    },
     "Bass Boost" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -594,6 +604,16 @@
         }
       }
     },
+    "Download albums and playlists to listen without a network." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stáhněte si alba a playlisty a poslouchejte je i bez sítě."
+          }
+        }
+      }
+    },
     "Download an album or a playlist with the arrow on its page, or a song from its menu. It then plays without a network." : {
       "localizations" : {
         "cs" : {
@@ -610,6 +630,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Staženo"
+          }
+        }
+      }
+    },
+    "Downloaded Albums" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stažená alba"
           }
         }
       }
@@ -924,6 +954,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nejhranější"
+          }
+        }
+      }
+    },
+    "No network · downloaded music only" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez sítě · jen stažená hudba"
+          }
+        }
+      }
+    },
+    "Not available offline." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline není k dispozici."
+          }
+        }
+      }
+    },
+    "Offline Mode" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Režim offline"
+          }
+        }
+      }
+    },
+    "Offline mode · downloaded music only" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Režim offline · jen stažená hudba"
+          }
+        }
+      }
+    },
+    "Offline, and none of the songs left in the queue are downloaded." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jste offline a žádná ze zbývajících skladeb ve frontě není stažená."
+          }
+        }
+      }
+    },
+    "Shows and plays only what is on this iPhone, as it does on its own with no network. Saves mobile data." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobrazuje a přehrává jen to, co je v tomto iPhonu, stejně jako to aplikace dělá sama bez sítě. Šetří mobilní data."
+          }
+        }
+      }
+    },
+    "Turn Off" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vypnout"
+          }
+        }
+      }
+    },
+    "You're offline, and none of these songs are downloaded." : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jste offline a žádná z těchto skladeb není stažená."
           }
         }
       }

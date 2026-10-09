@@ -52,7 +52,7 @@ struct PlaylistsView: View {
             Button("Create") { create() }
         }
         .refreshable { await load() }
-        .task { await load() }
+        .task(id: model.isOffline) { await load() }
     }
 
     private func subtitle(_ playlist: Playlist) -> String {
@@ -66,7 +66,8 @@ struct PlaylistsView: View {
         do {
             state = .loaded(try await client.playlists())
         } catch {
-            state = .failed(error.userMessage)
+            let downloaded = model.offlinePlaylists
+            state = downloaded.isEmpty ? .failed(error.userMessage) : .loaded(downloaded)
         }
     }
 
@@ -206,7 +207,11 @@ struct PlaylistDetailView: View {
             model.learn(songs: loaded.songs)
             state = .loaded(loaded.songs)
         } catch {
-            state = .failed(error.userMessage)
+            if let downloaded = model.offlineSongs(playlistId: playlist.id), !downloaded.isEmpty {
+                state = .loaded(downloaded)
+            } else {
+                state = .failed(error.userMessage)
+            }
         }
     }
 

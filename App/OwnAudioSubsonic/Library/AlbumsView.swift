@@ -49,10 +49,15 @@ struct AlbumsView: View {
             }
         }
         .refreshable { await reload() }
-        .task(id: type) { await reload() }
+        .task(id: "\(type.rawValue)|\(model.isOffline)") { await reload() }
     }
 
     private func reload() async {
+        if model.isOffline {
+            reachedEnd = true
+            state = .loaded(offlineAlbums)
+            return
+        }
         guard let client = model.activeClient else { return }
         reachedEnd = false
         do {
@@ -61,6 +66,22 @@ struct AlbumsView: View {
             state = .loaded(page)
         } catch {
             state = .failed(error.userMessage)
+        }
+    }
+
+    /// The downloaded albums, in the closest order to the chosen one.
+    private var offlineAlbums: [Album] {
+        switch type {
+        case .alphabeticalByArtist:
+            model.offlineAlbums.sorted { ($0.artist ?? "").localizedStandardCompare($1.artist ?? "") == .orderedAscending }
+        case .newest, .recent:
+            model.offlineAlbumsByDownloadDate
+        case .random:
+            model.offlineAlbums.shuffled()
+        case .starred:
+            model.offlineAlbums.filter { model.compositeId($0.id).map(model.isStarred) ?? false }
+        default:
+            model.offlineAlbums
         }
     }
 

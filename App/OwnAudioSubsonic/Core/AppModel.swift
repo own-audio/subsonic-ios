@@ -44,6 +44,30 @@ final class AppModel {
         }
     }
 
+    /// Set by the listener: play and show only downloaded music, even with a network.
+    var downloadedOnly: Bool {
+        didSet {
+            UserDefaults.standard.set(downloadedOnly, forKey: Self.downloadedOnlyKey)
+            applyOfflineState()
+        }
+    }
+
+    let network = NetworkMonitor()
+
+    /// No network, or the listener chose downloaded music only. Screens then show what is on the
+    /// phone and what was seen before, and the player passes over songs that aren't downloaded.
+    var isOffline: Bool {
+        downloadedOnly || !network.isConnected || Self.isSimulatingOffline
+    }
+
+    /// The listener chose it, rather than the network being gone.
+    var isOfflineByChoice: Bool { downloadedOnly && network.isConnected && !Self.isSimulatingOffline }
+
+    private func applyOfflineState() {
+        offlineSwitch.isOn = isOffline
+        engine.requiresLocalFiles = isOffline
+    }
+
     /// Report "now playing" and counted plays to the server.
     var scrobblingEnabled: Bool {
         didSet { UserDefaults.standard.set(scrobblingEnabled, forKey: Self.scrobblingKey) }
@@ -58,8 +82,9 @@ final class AppModel {
 
     private static let activeServerKey = "activeServerId"
     private static let scrobblingKey = "scrobblingEnabled"
+    private static let downloadedOnlyKey = "downloadedOnly"
 
-    /// UI tests check offline playback by pointing every server at an address nothing answers.
+    /// UI tests check offline behaviour by starting the app as if there were no network.
     private static var isSimulatingOffline: Bool {
         #if DEBUG
         ProcessInfo.processInfo.arguments.contains("-simulateOffline")
@@ -67,18 +92,26 @@ final class AppModel {
         false
         #endif
     }
-    private static let unreachableHost = URL(string: "http://127.0.0.1:9")!
     private var scrobbler: ScrobbleTracker?
     private var scrobbleTickTask: Task<Void, Never>?
     private let pendingScrobbles = PendingScrobbles()
+    private let responseCache = DiskResponseCache()
+    private let offlineSwitch = OfflineSwitch()
+    /// Short timeouts: on a network that is there but goes nowhere, the default minute per
+    /// request looks like a frozen app.
+    private static let session: URLSession = {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 15
+        return URLSession(configuration: configuration)
+    }()
 
     init(store: ServerStore = ServerStore()) {
         self.store = store
         let registry = ClientRegistry()
         self.registry = registry
-        covers = CoverArtLoader(registry: registry)
+        covers = CoverArtLoader(registry: registry, offline: offlineSwitch)
         downloads = DownloadManager(registry: registry)
-        fileCache = TrackFileCache(remoteURL: { try await registry.streamURL(trackId: $0) })
+        fileCache = TrackFileCache(remoteURL: { try await registry.streamURL(trackId: $0) }, session: Self.session)
         playbackSettings = PlaybackSettingsStore()
         equalizer = EqualizerStore()
         resumeStore = UserDefaultsResumeStore()
@@ -95,6 +128,13 @@ final class AppModel {
             return await covers.data(artworkId: artworkId, size: 600)
         }
         scrobblingEnabled = UserDefaults.standard.object(forKey: Self.scrobblingKey) as? Bool ?? true
+        downloadedOnly = UserDefaults.standard.bool(forKey: Self.downloadedOnlyKey)
+        applyOfflineState()
+        network.onChange = { [weak self] connected in
+            guard let self else { return }
+            self.applyOfflineState()
+            if connected { Task { await self.flushPendingScrobbles() } }
+        }
         wireScrobbling()
         // A downloaded song plays from the phone whether or not the server can be reached.
         let files = downloads.files
@@ -127,6 +167,7 @@ final class AppModel {
             UserDefaults.standard.removeObject(forKey: Self.activeServerKey)
             await covers.clear()
             downloads.removeAll()
+            responseCache.removeAll()
         }
         servers = await store.loadAll()
         await addServerFromLaunchArguments()
@@ -163,6 +204,9 @@ final class AppModel {
         try await store.remove(id: id)
         servers.removeAll { $0.id == id }
         downloads.removeAll(serverId: id)
+        // Saved answers are keyed by server; this server's are of no further use, and it is
+        // simpler to let the others be fetched again than to pick them apart.
+        responseCache.removeAll()
         if let track = engine.currentTrack, TrackID.parse(track.id)?.serverId == id { engine.stop() }
         await rebuildClients()
         if activeServerId == id { activeServerId = servers.first?.id }
@@ -185,8 +229,23 @@ final class AppModel {
 
     /// Plays `songs` from the active server, starting at `startSongId` or the first song.
     /// `containerId` ("album:…") lets the engine remember where in it listening stopped.
+    /// Offline, only the downloaded ones; a tapped song that isn't downloaded starts the list at
+    /// the next one that is.
     func play(_ songs: [Song], startSongId: String? = nil, shuffled: Bool = false, containerId: String? = nil) {
         guard let serverId = activeServerId, !songs.isEmpty else { return }
+        var songs = songs
+        var startSongId = startSongId
+        if isOffline {
+            let isLocal = { (song: Song) in self.downloads.isDownloaded(TrackID.make(serverId: serverId, itemId: song.id)) }
+            if let start = startSongId, let index = songs.firstIndex(where: { $0.id == start }), !isLocal(songs[index]) {
+                startSongId = songs[index...].first(where: isLocal)?.id
+            }
+            songs = songs.filter(isLocal)
+            guard !songs.isEmpty else {
+                actionError = String(localized: "You're offline, and none of these songs are downloaded.")
+                return
+            }
+        }
         let tracks = songs.map { $0.track(serverId: serverId) }
         engine.setShuffled(shuffled)
         Task {
@@ -437,8 +496,9 @@ final class AppModel {
     private func rebuildClients() async {
         clients = Dictionary(uniqueKeysWithValues: servers.map { record in
             (record.id, SubsonicClient(
-                host: Self.isSimulatingOffline ? Self.unreachableHost : record.credentials.host,
-                username: record.credentials.username, password: record.credentials.password
+                host: record.credentials.host,
+                username: record.credentials.username, password: record.credentials.password,
+                session: Self.session, cache: responseCache, offline: offlineSwitch
             ))
         })
         await registry.set(clients)
@@ -475,6 +535,8 @@ extension Error {
             return String(localized: "The server's answer couldn't be read. Is this a Subsonic server?")
         case .network:
             return String(localized: "Couldn't reach the server.")
+        case .offline:
+            return String(localized: "Not available offline.")
         }
     }
 }

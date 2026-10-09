@@ -33,7 +33,10 @@ the trade-off chosen for simpler maintenance.
   they change and never submit a counted play.
 - [x] **P7: Offline.** Downloads per song, album and playlist; a Downloads screen that works
   with no network; offline playback verified by a UI test that restarts with every server
-  unreachable, on both Navidrome and own.audio. Not yet: background downloads (URLSession
+  unreachable, on both Navidrome and own.audio. Offline mode (2026-10-09, after a tester found
+  a partly downloaded album seemed to hang): automatic with no network, or by choice; library
+  from the downloads, saved server answers for screens seen before, the player passes over
+  songs that aren't downloaded, 15-second timeouts. Not yet: background downloads (URLSession
   background sessions) and a cellular-data switch.
 - [~] **P8: CarPlay.** Scene and templates built (Recently Played, Recently Added, Downloads,
   Playlists, Artists, Favorites → system Now Playing). Still to do: check it in the
@@ -56,7 +59,8 @@ the trade-off chosen for simpler maintenance.
     "own.audio for Subsonic"; first build (0.1.0) uploaded to TestFlight.
   - [ ] TestFlight on a real iPhone; EU trader status (DSA) before App Store release; CarPlay
     entitlement request.
-  - [ ] Public repository, launch posts (r/selfhosted, r/navidrome, Navidrome's apps page).
+  - [x] Public repository (2026-10-09).
+  - [ ] Launch posts (r/selfhosted, r/navidrome, Navidrome's apps page).
 
 ## Open questions
 

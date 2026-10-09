@@ -194,6 +194,8 @@ struct SongRow: View {
             }
         }
         .contentShape(Rectangle())
+        // Offline, a song that isn't downloaded is shown but can't play.
+        .opacity(model.isPlayable(song) ? 1 : 0.4)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
     }

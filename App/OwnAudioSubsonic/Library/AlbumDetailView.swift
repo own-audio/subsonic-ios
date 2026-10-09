@@ -149,7 +149,9 @@ struct AlbumDetailView: View {
             model.learn(albums: [loaded.album])
             state = .loaded(loaded)
         } catch {
-            state = .failed(error.userMessage)
+            // Never opened online, but some of it is downloaded: show those.
+            let downloaded = model.offlineSongs(albumId: album.id)
+            state = downloaded.isEmpty ? .failed(error.userMessage) : .loaded((album, downloaded))
         }
     }
 }
