@@ -1,0 +1,28 @@
+A native player for the music on your own server. It works with Navidrome, Gonic, Airsonic, LMS, Ampache, own.audio and any other Subsonic or OpenSubsonic server.
+
+Plays the way music should
+• Gapless playback, so live and classical albums flow as recorded, or crossfade if you prefer
+• Lossless FLAC and ALAC, with the format shown in the player
+• Starts playing while the song is still arriving
+• Volume leveling from your files' ReplayGain values
+• Six-band equalizer with presets
+• Synced lyrics that follow the song, where your server has them
+
+Your whole library
+• Artists, albums, playlists and search
+• Recently added, recently played, most played, favorites
+• Star songs, albums and artists; rate songs and albums
+• Create and edit playlists
+• Plays are reported to your server, which can pass them on to Last.fm or ListenBrainz
+
+Offline
+• Download albums, playlists or single songs and play them with no signal
+
+Everywhere
+• Several servers at once
+• AirPlay, lock screen and Control Center
+• iPhone and iPad, in English and Czech
+
+Private by design: the app talks only to the servers you add. Your password stays in the iPhone's Keychain; only a one-time token made from it is sent. No account, no analytics, no ads.
+
+Free and open source under the MPL-2.0. Made by own.audio.

@@ -1,0 +1,28 @@
+Nativní přehrávač pro hudbu na vašem vlastním serveru. Funguje s Navidrome, Gonic, Airsonic, LMS, Ampache, own.audio a s každým dalším serverem Subsonic nebo OpenSubsonic.
+
+Hraje tak, jak má hudba hrát
+• Přehrávání bez mezer, takže živá a klasická alba plynou tak, jak byla nahrána, nebo prolínání, chcete-li
+• Bezeztrátové FLAC a ALAC, s formátem zobrazeným v přehrávači
+• Začne hrát, ještě než skladba celá dorazí
+• Vyrovnání hlasitosti podle hodnot ReplayGain ve vašich souborech
+• Šestipásmový ekvalizér s předvolbami
+• Časovaný text, který sleduje skladbu, pokud ho váš server má
+
+Celá vaše knihovna
+• Interpreti, alba, playlisty a hledání
+• Nedávno přidané, nedávno hrané, nejhranější, oblíbené
+• Oblíbené skladby, alba a interpreti; hodnocení skladeb a alb
+• Vytváření a úpravy playlistů
+• Přehrání se hlásí vašemu serveru, který je může předávat na Last.fm nebo ListenBrainz
+
+Offline
+• Stáhněte si alba, playlisty nebo jednotlivé skladby a poslouchejte je i bez signálu
+
+Všude
+• Několik serverů najednou
+• AirPlay, zamčená obrazovka a Ovládací centrum
+• iPhone a iPad, česky a anglicky
+
+Soukromí od základu: aplikace mluví jen se servery, které přidáte. Heslo zůstává v klíčence iPhonu; posílá se jen jednorázový token z něj vytvořený. Žádný účet, žádná analytika, žádné reklamy.
+
+Zdarma a s otevřeným kódem pod licencí MPL-2.0. Vytvořilo own.audio.

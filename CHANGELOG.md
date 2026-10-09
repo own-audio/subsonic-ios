@@ -103,6 +103,11 @@ All notable changes to this project are documented here. The format follows
 - App icon: the own.audio construction in orange, light with a dark-mode variant (source in
   `Design/`). Home-screen name "own subsonic", like own music, own book and own podcast; the
   store name is "own.audio for Subsonic".
+- App Store listing in English and Czech (`AppStore/`), and `scripts/app-store-screenshots.sh`,
+  which takes the screenshots on the required iPhone 6.9" and iPad 13" sizes in both languages
+  from a server whose music may be shown, with a clean status bar.
+- Privacy manifest: no tracking, no data collected; UserDefaults and file attributes declared
+  with their reasons.
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause

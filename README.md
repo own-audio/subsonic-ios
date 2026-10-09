@@ -8,7 +8,7 @@ Airsonic, LMS, Ampache, own.audio and others. Swift and SwiftUI, no web views.
 - Downloads for offline listening
 - Synced lyrics, volume leveling (ReplayGain), equalizer
 - Favorites, ratings, playlists, scrobbling
-- Several servers at once, CarPlay, iPad
+- Several servers at once, iPad; CarPlay is built but not yet tried in a car
 - English and Czech
 
 Made by [own.audio](https://www.own.audio). Free, no account, no tracking.

@@ -50,8 +50,9 @@ the trade-off chosen for simpler maintenance.
   - [x] Czech localization (glossary terms, plurals); a UI test walks the screens in Czech.
   - [x] Large text: fixes from a UI test at the largest accessibility size.
   - [x] README.
-  - [ ] App icon and App Store name.
-  - [ ] App Store listing (text in English and Czech, screenshots, privacy: no data collected).
+  - [x] App icon and App Store name ("own.audio for Subsonic", home screen "own subsonic").
+  - [x] App Store listing text (English, Czech), screenshot script, privacy manifest.
+  - [ ] Upload: needs the Apple Developer account (signing, App Store Connect record).
   - [ ] Public repository, launch posts (r/selfhosted, r/navidrome, Navidrome's apps page).
 
 ## Open questions

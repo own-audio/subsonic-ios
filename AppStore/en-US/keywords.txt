@@ -1,0 +1,1 @@
+navidrome,subsonic,opensubsonic,gonic,airsonic,ampache,self-hosted,flac,gapless,music server
