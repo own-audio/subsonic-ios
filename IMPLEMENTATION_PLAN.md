@@ -37,7 +37,11 @@ the trade-off chosen for simpler maintenance.
   background sessions) and a cellular-data switch.
 - [ ] **P8: CarPlay.** Needs the CarPlay audio entitlement, which needs a paid Apple
   Developer account.
-- [ ] **P9: Extras.** Lyrics (OpenSubsonic `getLyricsBySongId`), ReplayGain, EQ.
+- [x] **P9: Extras.** Lyrics (OpenSubsonic `getLyricsBySongId`, classic `getLyrics`
+  fallback), ReplayGain (track/album/off, peak-protected, per node), EQ screen. The two real
+  test servers carry neither lyrics nor ReplayGain tags, so these were verified against a
+  local Navidrome with a generated album (`.lrc` file, `LYRICS` tag, ReplayGain tags); the real
+  servers verify that "no lyrics" is handled.
 - [ ] **P10: Release.** iPad layout, accessibility, localization, App Store listing,
   public repo, launch posts.
 

@@ -68,6 +68,22 @@ All notable changes to this project are documented here. The format follows
   whose Subsonic key it fetches fresh, as a demo server issues a new one daily).
 - UI test: download an album, restart with every server unreachable, play it from Downloads.
   `-simulateOffline` (debug builds only) points every server at an address nothing answers.
+- Lyrics (player tool): synced lyrics follow the music with the current line centred, and a
+  tap on a line jumps there; plain lyrics scroll; a server with several versions (languages,
+  synced and plain) offers a choice. Uses the OpenSubsonic `songLyrics` extension where the
+  server has it, classic `getLyrics` otherwise.
+- Volume leveling (ReplayGain), on by default per song, or per album, or off (Settings). Each
+  of the engine's two player nodes has its own gain stage, so quiet songs can be raised as
+  well as loud ones lowered, never so far that the peak clips; the gain switches exactly at a
+  gapless track change and follows each side of a crossfade. The player shows the gain
+  applied next to the format.
+- Equalizer screen (player tool and Settings): on/off, preamp, six bands, presets, reset.
+- `SubsonicKit`: `lyrics(for:useSongLyricsExtension:)`, `Lyrics.lineIndex(at:)`,
+  `Song.replayGain`. `PlayerEngine`: `Track.replayGain`, `ReplayGainMode`,
+  `PlaybackEngine.appliedGainDb`.
+- UI test: ReplayGain shown, synced lyrics loaded and following, equalizer preset applied
+  (runs where an album with lyrics and ReplayGain tags exists; `NAVIDROME_LYRICS_ALBUM` in
+  `test-servers.local.env`).
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
