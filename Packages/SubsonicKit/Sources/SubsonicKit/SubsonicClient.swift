@@ -218,6 +218,34 @@ public struct SubsonicClient: Sendable {
             + artistIds.map { URLQueryItem(name: "artistId", value: $0) }
     }
 
+    // MARK: - Lyrics
+
+    /// Lyrics for a song: the OpenSubsonic `songLyrics` extension when the server has it
+    /// (synced lines, several languages), otherwise classic `getLyrics` by artist and title
+    /// (plain text). Empty when there are none.
+    public func lyrics(for song: Song, useSongLyricsExtension: Bool) async throws -> [Lyrics] {
+        if useSongLyricsExtension {
+            let payload: StructuredLyricsPayload = try await get(
+                "getLyricsBySongId", query: [URLQueryItem(name: "id", value: song.id)]
+            )
+            return (payload.lyricsList.structuredLyrics ?? []).compactMap { item in
+                let lines = (item.line ?? []).map { Lyrics.Line(startMs: $0.start, text: $0.value) }
+                guard !lines.isEmpty else { return nil }
+                let synced = (item.synced ?? false) && lines.contains { $0.startMs != nil }
+                return Lyrics(lines: lines, isSynced: synced, language: item.lang, offsetMs: item.offset ?? 0)
+            }
+        }
+        guard let artist = song.artist else { return [] }
+        let payload: ClassicLyricsPayload = try await get("getLyrics", query: [
+            URLQueryItem(name: "artist", value: artist),
+            URLQueryItem(name: "title", value: song.title),
+        ])
+        let text = payload.lyrics?.value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !text.isEmpty else { return [] }
+        let lines = text.components(separatedBy: .newlines).map { Lyrics.Line(startMs: nil, text: $0) }
+        return [Lyrics(lines: lines, isSynced: false)]
+    }
+
     // MARK: - URLs for the player and image loading
 
     /// Synchronous: auth is computed locally, so there is nothing to fetch first.

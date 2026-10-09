@@ -86,13 +86,15 @@ public struct Song: Codable, Identifiable, Sendable, Hashable {
     /// 1–5, absent if unrated.
     public let userRating: Int?
     public let playCount: Int?
+    /// OpenSubsonic; absent on classic servers and on files without the tags.
+    public let replayGain: ReplayGain?
 
     public init(
         id: String, title: String, album: String? = nil, artist: String? = nil,
         albumId: String? = nil, artistId: String? = nil, track: Int? = nil, discNumber: Int? = nil,
         duration: Int? = nil, genre: String? = nil, coverArt: String? = nil,
         suffix: String? = nil, bitRate: Int? = nil, starred: String? = nil,
-        userRating: Int? = nil, playCount: Int? = nil
+        userRating: Int? = nil, playCount: Int? = nil, replayGain: ReplayGain? = nil
     ) {
         self.id = id
         self.title = title
@@ -110,6 +112,55 @@ public struct Song: Codable, Identifiable, Sendable, Hashable {
         self.starred = starred
         self.userRating = userRating
         self.playCount = playCount
+        self.replayGain = replayGain
+    }
+}
+
+/// Loudness normalization values, in dB and as linear peaks (1.0 = full scale).
+public struct ReplayGain: Codable, Sendable, Hashable {
+    public let trackGain: Double?
+    public let albumGain: Double?
+    public let trackPeak: Double?
+    public let albumPeak: Double?
+
+    public init(trackGain: Double? = nil, albumGain: Double? = nil, trackPeak: Double? = nil, albumPeak: Double? = nil) {
+        self.trackGain = trackGain
+        self.albumGain = albumGain
+        self.trackPeak = trackPeak
+        self.albumPeak = albumPeak
+    }
+
+    /// Servers send an empty object for files without the tags.
+    public var isEmpty: Bool { trackGain == nil && albumGain == nil }
+}
+
+/// One set of lyrics. A server may return several (languages, synced and plain).
+public struct Lyrics: Sendable, Hashable {
+    public struct Line: Sendable, Hashable {
+        /// Milliseconds from the start, for synced lyrics.
+        public let startMs: Int?
+        public let text: String
+    }
+
+    public let lines: [Line]
+    public let isSynced: Bool
+    /// ISO 639 code; "xxx" or nil when unknown.
+    public let language: String?
+    /// Added to every start time, in milliseconds.
+    public let offsetMs: Int
+
+    public init(lines: [Line], isSynced: Bool, language: String? = nil, offsetMs: Int = 0) {
+        self.lines = lines
+        self.isSynced = isSynced
+        self.language = language
+        self.offsetMs = offsetMs
+    }
+
+    /// The line playing at `seconds`, for synced lyrics.
+    public func lineIndex(at seconds: Double) -> Int? {
+        guard isSynced else { return nil }
+        let ms = Int(seconds * 1000) - offsetMs
+        return lines.lastIndex { ($0.startMs ?? .max) <= ms }
     }
 }
 
@@ -265,4 +316,28 @@ struct ExtensionsPayload: Decodable {
         let versions: [Int]
     }
     let openSubsonicExtensions: [Extension]?
+}
+
+struct StructuredLyricsPayload: Decodable {
+    struct List: Decodable {
+        struct Structured: Decodable {
+            struct Line: Decodable {
+                let start: Int?
+                let value: String
+            }
+            let lang: String?
+            let synced: Bool?
+            let offset: Int?
+            let line: [Line]?
+        }
+        let structuredLyrics: [Structured]?
+    }
+    let lyricsList: List
+}
+
+struct ClassicLyricsPayload: Decodable {
+    struct Classic: Decodable {
+        let value: String?
+    }
+    let lyrics: Classic?
 }

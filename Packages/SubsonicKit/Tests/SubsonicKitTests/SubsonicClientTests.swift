@@ -293,6 +293,68 @@ struct SubsonicClientTests {
         #expect(await client(classic).openSubsonicExtensions().isEmpty)
     }
 
+    // MARK: - Lyrics and ReplayGain
+
+    @Test("structured lyrics decode with their timing")
+    func structuredLyrics() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#"""
+            "lyricsList":{"structuredLyrics":[{"lang":"eng","synced":true,"offset":-100,"line":[{"start":1000,"value":"One"},{"start":5000,"value":"Two"}]}]}
+            """#))
+        }
+        let lyrics = try await client(mock).lyrics(for: Song(id: "so-1", title: "T"), useSongLyricsExtension: true)
+        let first = try #require(lyrics.first)
+        #expect(first.isSynced)
+        #expect(first.offsetMs == -100)
+        #expect(first.lines.map(\.text) == ["One", "Two"])
+        #expect(await mock.requestLog().first?.url?.path == "/rest/getLyricsBySongId.view")
+    }
+
+    @Test("an empty lyrics list means none, not an error")
+    func noLyrics() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""lyricsList":{}"#))
+        }
+        #expect(try await client(mock).lyrics(for: Song(id: "so-1", title: "T"), useSongLyricsExtension: true).isEmpty)
+    }
+
+    @Test("without the extension, classic getLyrics by artist and title gives plain lines")
+    func classicLyrics() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""lyrics":{"artist":"A","title":"T","value":"Line one\nLine two\n"}"#))
+        }
+        let lyrics = try await client(mock).lyrics(for: Song(id: "so-1", title: "T", artist: "A"), useSongLyricsExtension: false)
+        #expect(lyrics.first?.isSynced == false)
+        #expect(lyrics.first?.lines.map(\.text) == ["Line one", "Line two"])
+        let query = await mock.firstQuery()
+        #expect(query.first { $0.name == "artist" }?.value == "A")
+        #expect(query.first { $0.name == "title" }?.value == "T")
+    }
+
+    @Test("classic lyrics with an empty value are none")
+    func classicEmpty() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#""lyrics":{"artist":"A","title":"T","value":""}"#))
+        }
+        #expect(try await client(mock).lyrics(for: Song(id: "so-1", title: "T", artist: "A"), useSongLyricsExtension: false).isEmpty)
+    }
+
+    @Test("replayGain decodes, and an empty object is empty")
+    func replayGainDecodes() async throws {
+        let mock = await MockURLProtocol.makeStubbedSession { _ in
+            .init(statusCode: 200, body: Self.envelope(#"""
+            "album":{"id":"al","name":"A","song":[
+                {"id":"1","title":"a","replayGain":{"trackGain":-6.5,"albumGain":-5,"trackPeak":0.9,"albumPeak":0.95}},
+                {"id":"2","title":"b","replayGain":{}}
+            ]}
+            """#))
+        }
+        let songs = try await client(mock).album(id: "al").songs
+        #expect(songs[0].replayGain?.trackGain == -6.5)
+        #expect(songs[0].replayGain?.albumPeak == 0.95)
+        #expect(songs[1].replayGain?.isEmpty == true)
+    }
+
     // MARK: - Errors (HTTP 200 with status "failed")
 
     @Test("a failed write surfaces the server's code and message")
@@ -385,6 +447,20 @@ struct SubsonicClientTests {
 
 @Suite("Models")
 struct ModelTests {
+    @Test("the current synced line follows the time, offset included")
+    func currentLine() {
+        let lyrics = Lyrics(
+            lines: [.init(startMs: 1000, text: "a"), .init(startMs: 5000, text: "b"), .init(startMs: 10000, text: "c")],
+            isSynced: true, offsetMs: 500
+        )
+        #expect(lyrics.lineIndex(at: 0.5) == nil)
+        #expect(lyrics.lineIndex(at: 1.6) == 0)
+        #expect(lyrics.lineIndex(at: 5.4) == 0)
+        #expect(lyrics.lineIndex(at: 5.5) == 1)
+        #expect(lyrics.lineIndex(at: 99) == 2)
+        #expect(Lyrics(lines: [.init(startMs: nil, text: "x")], isSynced: false).lineIndex(at: 3) == nil)
+    }
+
     @Test("an image URL without a size parameter is left alone")
     func imageUrlWithoutSize() {
         #expect(Artist.displaySizedImageURL("https://x.example.com/a.jpg") == "https://x.example.com/a.jpg")

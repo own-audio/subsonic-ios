@@ -84,6 +84,22 @@ struct LiveServerTests {
         print("extensions:", extensions.sorted())
     }
 
+    /// Asking for lyrics must work whether or not a song has any. With
+    /// `SUBSONIC_LYRICS_SONG` set to a song title that has synced lyrics, also checks them.
+    @Test("lyrics can be asked for, and a known song's synced lyrics arrive")
+    func lyricsLive() async throws {
+        let api = try makeClient()
+        let useExtension = await api.openSubsonicExtensions().contains("songLyrics")
+        let target = try #require(try await api.albumList(size: 10).first { $0.songCount > 0 })
+        let song = try #require(try await api.album(id: target.id).songs.first)
+        _ = try await api.lyrics(for: song, useSongLyricsExtension: useExtension)
+
+        guard let title = ProcessInfo.processInfo.environment["SUBSONIC_LYRICS_SONG"] else { return }
+        let known = try #require(try await api.search(title).songs.first { $0.title == title })
+        let lyrics = try await api.lyrics(for: known, useSongLyricsExtension: useExtension)
+        #expect(lyrics.contains { $0.isSynced && $0.lines.count > 1 })
+    }
+
     /// Writes, then puts back exactly what was there.
     @Test("star and rate a song, then restore it")
     func starAndRateRoundTrip() async throws {
