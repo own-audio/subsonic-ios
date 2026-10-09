@@ -119,6 +119,9 @@ All notable changes to this project are documented here. The format follows
 - App Store listing in English and Czech (`AppStore/`), and `scripts/app-store-screenshots.sh`,
   which takes the screenshots on the required iPhone 6.9" and iPad 13" sizes in both languages
   from a server whose music may be shown, with a clean status bar.
+- `scripts/testflight.sh`: archive and upload to TestFlight, with the build number taken from
+  the commit count; the team comes from the gitignored `release.local.env`. The app declares
+  that it uses only exempt encryption (standard HTTPS).
 - Debug builds: `-debugServerHost`, `-debugServerUser`, `-debugServerPassword` (and optional
   `-debugServerName`) launch arguments add a server at launch, to hand someone a simulator
   that is already connected.

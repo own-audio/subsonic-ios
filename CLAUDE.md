@@ -39,6 +39,10 @@ deluan/navidrome`, then `POST /auth/createAdmin` with a username and password, t
 
 Every change gets a `CHANGELOG.md` entry under `[Unreleased]`.
 
+TestFlight: `scripts/testflight.sh` (needs `DEVELOPMENT_TEAM` in the gitignored
+`release.local.env` and the account signed in to Xcode). The Team ID stays out of `project.yml`
+because the repo is public.
+
 Editor shows "no such module" on code that builds? Run
 `xcode-build-server config -project OwnAudioSubsonic.xcodeproj -scheme OwnAudioSubsonic`
 (`buildServer.json` is gitignored).

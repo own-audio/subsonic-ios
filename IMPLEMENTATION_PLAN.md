@@ -52,7 +52,10 @@ the trade-off chosen for simpler maintenance.
   - [x] README.
   - [x] App icon and App Store name ("own.audio for Subsonic", home screen "own subsonic").
   - [x] App Store listing text (English, Czech), screenshot script, privacy manifest.
-  - [ ] Upload: needs the Apple Developer account (signing, App Store Connect record).
+  - [x] Apple Developer Program active (2026-10-09); App ID registered; App Store Connect record
+    "own.audio for Subsonic"; first build (0.1.0) uploaded to TestFlight.
+  - [ ] TestFlight on a real iPhone; EU trader status (DSA) before App Store release; CarPlay
+    entitlement request.
   - [ ] Public repository, launch posts (r/selfhosted, r/navidrome, Navidrome's apps page).
 
 ## Open questions
