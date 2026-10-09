@@ -20,12 +20,41 @@ final class AppModel {
     let covers: CoverArtLoader
     let resumeStore: ResumeStore
 
+    /// Starred songs, albums and artists, as composite ids (`TrackID`), learned from whatever
+    /// the screens have loaded and kept current when the listener stars or unstars.
+    private(set) var starredIds: Set<String> = []
+    /// Ratings 1–5 by composite id, learned the same way.
+    private(set) var ratings: [String: Int] = [:]
+
+    /// A failed action (star, rate, playlist edit), shown once as an alert by `RootView`.
+    var actionError: String?
+
+    /// Runs a user action and reports a failure in the shared alert.
+    func perform(_ action: @escaping () async throws -> Void) {
+        Task {
+            do {
+                try await action()
+            } catch {
+                actionError = error.userMessage
+            }
+        }
+    }
+
+    /// Report "now playing" and counted plays to the server.
+    var scrobblingEnabled: Bool {
+        didSet { UserDefaults.standard.set(scrobblingEnabled, forKey: Self.scrobblingKey) }
+    }
+
     private let store: ServerStore
     private let registry: ClientRegistry
     private let fileCache: TrackFileCache
     private var clients: [UUID: SubsonicClient] = [:]
 
     private static let activeServerKey = "activeServerId"
+    private static let scrobblingKey = "scrobblingEnabled"
+    private var scrobbler: ScrobbleTracker?
+    private var scrobbleTickTask: Task<Void, Never>?
+    private let pendingScrobbles = PendingScrobbles()
 
     init(store: ServerStore = ServerStore()) {
         self.store = store
@@ -48,6 +77,8 @@ final class AppModel {
             guard let artworkId = track.artworkId else { return nil }
             return await covers.data(artworkId: artworkId, size: 600)
         }
+        scrobblingEnabled = UserDefaults.standard.object(forKey: Self.scrobblingKey) as? Bool ?? true
+        wireScrobbling()
     }
 
     var activeServer: ServerRecord? {
@@ -70,6 +101,7 @@ final class AppModel {
         let saved = UserDefaults.standard.string(forKey: Self.activeServerKey).flatMap(UUID.init)
         activeServerId = servers.contains { $0.id == saved } ? saved : servers.first?.id
         hasLoaded = true
+        await flushPendingScrobbles()
     }
 
     /// Checks the credentials against the server before saving anything, so a typo is caught
@@ -129,6 +161,164 @@ final class AppModel {
                 containerId: containerId.map { "\(serverId.uuidString)|\($0)" }
             )
         }
+    }
+
+    // MARK: - Scrobbling
+
+    private func wireScrobbling() {
+        let scrobbler = ScrobbleTracker { [weak self] event in self?.report(event) }
+        self.scrobbler = scrobbler
+        engine.onPlaybackStarted = { [weak self] track, _ in
+            guard let self, self.scrobblingEnabled else { return }
+            scrobbler.started(key: track.id, durationSecs: track.durationSecs)
+            self.startScrobbleTicks()
+        }
+        engine.onPlaybackStopped = { [weak self] track, _, reason in
+            guard let self, self.scrobblingEnabled else { return }
+            let isEnd: Bool = switch reason {
+            case .completed, .skipped, .replaced: true
+            case .stopped, .seeked: false
+            }
+            scrobbler.stopped(key: track.id, isEnd: isEnd)
+        }
+    }
+
+    /// Counts a play while it is still playing, so it isn't lost if the app is killed.
+    private func startScrobbleTicks() {
+        guard scrobbleTickTask == nil else { return }
+        scrobbleTickTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(15))
+                guard let self else { return }
+                if self.engine.isPlaying { self.scrobbler?.tick() }
+            }
+        }
+    }
+
+    private func report(_ event: ScrobbleTracker.Event) {
+        Task {
+            switch event {
+            case .nowPlaying(let trackId):
+                guard let (client, songId) = await resolve(trackId) else { return }
+                try? await client.scrobble(songId: songId, submission: false)
+            case .played(let trackId, let startedAt):
+                let entry = PendingScrobbles.Entry(trackId: trackId, startedAt: startedAt)
+                if await submit(entry) {
+                    await flushPendingScrobbles()
+                } else {
+                    pendingScrobbles.add(entry)
+                }
+            }
+        }
+    }
+
+    private func submit(_ entry: PendingScrobbles.Entry) async -> Bool {
+        guard let (client, songId) = await resolve(entry.trackId) else {
+            // The server was removed; there's nowhere to report it.
+            return true
+        }
+        do {
+            try await client.scrobble(songId: songId, submission: true, time: entry.startedAt)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Sends plays that couldn't be reported earlier. Called after a play goes through, and on
+    /// launch.
+    func flushPendingScrobbles() async {
+        var sent: [PendingScrobbles.Entry] = []
+        for entry in pendingScrobbles.all {
+            guard await submit(entry) else { break }
+            sent.append(entry)
+        }
+        pendingScrobbles.remove(sent)
+    }
+
+    private func resolve(_ trackId: String) async -> (SubsonicClient, String)? {
+        guard let (serverId, songId) = TrackID.parse(trackId), let client = clients[serverId] else { return nil }
+        return (client, songId)
+    }
+
+    // MARK: - Favorites and ratings
+
+    /// Remembers star and rating state from loaded songs, so every screen shows it.
+    func learn(songs: [Song]) {
+        guard let serverId = activeServerId else { return }
+        for song in songs {
+            let id = TrackID.make(serverId: serverId, itemId: song.id)
+            if song.starred != nil { starredIds.insert(id) } else { starredIds.remove(id) }
+            ratings[id] = song.userRating
+        }
+    }
+
+    func learn(albums: [Album]) {
+        guard let serverId = activeServerId else { return }
+        for album in albums {
+            let id = TrackID.make(serverId: serverId, itemId: album.id)
+            if album.starred != nil { starredIds.insert(id) } else { starredIds.remove(id) }
+            ratings[id] = album.userRating
+        }
+    }
+
+    func noteStarred(_ compositeId: String) {
+        starredIds.insert(compositeId)
+    }
+
+    func isStarred(_ compositeId: String) -> Bool {
+        starredIds.contains(compositeId)
+    }
+
+    enum StarTarget { case song, album, artist }
+
+    /// Flips the star at once and puts it back if the server refuses.
+    func toggleStar(_ compositeId: String, kind: StarTarget) async throws {
+        guard let (client, itemId) = await resolve(compositeId) else { return }
+        let starring = !starredIds.contains(compositeId)
+        if starring { starredIds.insert(compositeId) } else { starredIds.remove(compositeId) }
+        do {
+            let ids = [itemId]
+            switch (kind, starring) {
+            case (.song, true): try await client.star(songIds: ids)
+            case (.song, false): try await client.unstar(songIds: ids)
+            case (.album, true): try await client.star(albumIds: ids)
+            case (.album, false): try await client.unstar(albumIds: ids)
+            case (.artist, true): try await client.star(artistIds: ids)
+            case (.artist, false): try await client.unstar(artistIds: ids)
+            }
+        } catch {
+            if starring { starredIds.remove(compositeId) } else { starredIds.insert(compositeId) }
+            throw error
+        }
+    }
+
+    /// `rating` 1–5, or 0 to clear it.
+    func setRating(_ compositeId: String, rating: Int) async throws {
+        guard let (client, itemId) = await resolve(compositeId) else { return }
+        let previous = ratings[compositeId]
+        ratings[compositeId] = rating == 0 ? nil : rating
+        do {
+            try await client.setRating(id: itemId, rating: rating)
+        } catch {
+            ratings[compositeId] = previous
+            throw error
+        }
+    }
+
+    /// The playing track may have come from a screen that didn't know its star state.
+    func refreshState(trackId: String) async {
+        guard let (client, songId) = await resolve(trackId),
+              let song = try? await client.song(id: songId),
+              let serverId = TrackID.parse(trackId)?.serverId
+        else { return }
+        let id = TrackID.make(serverId: serverId, itemId: song.id)
+        if song.starred != nil { starredIds.insert(id) } else { starredIds.remove(id) }
+        ratings[id] = song.userRating
+    }
+
+    func compositeId(_ itemId: String) -> String? {
+        activeServerId.map { TrackID.make(serverId: $0, itemId: itemId) }
     }
 
     private func rebuildClients() async {

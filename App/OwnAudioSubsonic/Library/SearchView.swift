@@ -58,6 +58,7 @@ struct SearchView: View {
                                 SongRow(song: song, showsCover: true)
                             }
                             .buttonStyle(.plain)
+                            .songActions(song)
                         }
                     }
                 }
@@ -92,6 +93,8 @@ struct SearchView: View {
         do {
             let found = try await client.search(text)
             guard !Task.isCancelled else { return }
+            model.learn(songs: found.songs)
+            model.learn(albums: found.albums)
             result = found
             errorMessage = nil
         } catch {

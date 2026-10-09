@@ -33,6 +33,24 @@ struct ArtistDetailView: View {
         }
         .navigationTitle(artist.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let id = model.compositeId(artist.id) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    let starred = model.isStarred(id)
+                    Button {
+                        Haptics.selection()
+                        model.perform { try await model.toggleStar(id, kind: .artist) }
+                    } label: {
+                        Image(systemName: starred ? "star.fill" : "star")
+                    }
+                    .accessibilityLabel(starred ? "Unfavorite Artist" : "Favorite Artist")
+                }
+            }
+        }
+        .onAppear {
+            // The artist list says whether it is starred; remember that for the button.
+            if artist.starred != nil, let id = model.compositeId(artist.id) { model.noteStarred(id) }
+        }
         .task { await load() }
     }
 

@@ -18,7 +18,7 @@ struct LibraryView: View {
                     Divider().padding(.leading, 52)
                     link("Playlists", systemImage: "music.note.list", route: .playlists)
                     Divider().padding(.leading, 52)
-                    link("Favorites", systemImage: "star", route: .albums(.starred))
+                    link("Favorites", systemImage: "star", route: .favorites)
                 }
                 .padding(.horizontal, Theme.Spacing.screenEdge)
 

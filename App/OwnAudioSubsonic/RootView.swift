@@ -19,6 +19,14 @@ struct RootView: View {
         .fullScreenCover(isPresented: $isShowingPlayer) {
             PlayerView()
         }
+        .alert(
+            "That Didn't Work",
+            isPresented: Binding(get: { model.actionError != nil }, set: { if !$0 { model.actionError = nil } })
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.actionError ?? "")
+        }
     }
 
     private var tabs: some View {

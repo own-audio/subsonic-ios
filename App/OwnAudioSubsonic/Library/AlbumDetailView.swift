@@ -5,6 +5,7 @@ struct AlbumDetailView: View {
     @Environment(AppModel.self) private var model
     let album: Album
     @State private var state: LoadState<(album: Album, songs: [Song])> = .loading
+    @State private var isAddingToPlaylist = false
 
     var body: some View {
         List {
@@ -34,6 +35,40 @@ struct AlbumDetailView: View {
         .listStyle(.plain)
         .navigationTitle(album.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let id = model.compositeId(album.id) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    let starred = model.isStarred(id)
+                    Button {
+                        Haptics.selection()
+                        model.perform { try await model.toggleStar(id, kind: .album) }
+                    } label: {
+                        Image(systemName: starred ? "star.fill" : "star")
+                    }
+                    .accessibilityLabel(starred ? "Unfavorite Album" : "Favorite Album")
+                    .accessibilityIdentifier("album.star")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        RatingMenu(rating: model.ratings[id]) { rating in
+                            model.perform { try await model.setRating(id, rating: rating) }
+                        }
+                        Button {
+                            isAddingToPlaylist = true
+                        } label: {
+                            Label("Add Album to Playlist…", systemImage: "text.badge.plus")
+                        }
+                        .disabled(songs?.isEmpty ?? true)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("More")
+                }
+            }
+        }
+        .sheet(isPresented: $isAddingToPlaylist) {
+            AddToPlaylistSheet(songIds: songs?.map(\.id) ?? [])
+        }
         .task { await load() }
     }
 
@@ -92,6 +127,7 @@ struct AlbumDetailView: View {
                 SongRow(song: song)
             }
             .buttonStyle(.plain)
+            .songActions(song)
             .accessibilityIdentifier("album.song.\(song.title)")
         }
     }
@@ -99,7 +135,10 @@ struct AlbumDetailView: View {
     private func load() async {
         guard let client = model.activeClient else { return }
         do {
-            state = .loaded(try await client.album(id: album.id))
+            let loaded = try await client.album(id: album.id)
+            model.learn(songs: loaded.songs)
+            model.learn(albums: [loaded.album])
+            state = .loaded(loaded)
         } catch {
             state = .failed(error.userMessage)
         }

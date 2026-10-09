@@ -10,6 +10,7 @@ enum Route: Hashable {
     case albums(AlbumListType)
     case artists
     case playlists
+    case favorites
 }
 
 extension View {
@@ -22,6 +23,7 @@ extension View {
             case .albums(let type): AlbumsView(initialType: type)
             case .artists: ArtistsView()
             case .playlists: PlaylistsView()
+            case .favorites: FavoritesView()
             }
         }
     }
@@ -165,6 +167,12 @@ struct SongRow: View {
                 }
             }
             Spacer(minLength: 0)
+            if let id = model.compositeId(song.id), model.isStarred(id) {
+                Image(systemName: "star.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.yellow)
+                    .accessibilityLabel("Favorite")
+            }
             if let duration = song.duration {
                 Text(formatDuration(Double(duration)))
                     .font(.caption.monospacedDigit())

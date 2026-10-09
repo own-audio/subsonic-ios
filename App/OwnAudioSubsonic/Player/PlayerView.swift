@@ -48,6 +48,9 @@ struct PlayerView: View {
         .onChange(of: engine.currentTrack == nil) { _, isEmpty in
             if isEmpty { dismiss() }
         }
+        .task(id: engine.currentTrack?.id) {
+            if let id = engine.currentTrack?.id { await model.refreshState(trackId: id) }
+        }
     }
 
     /// Kept dark even with no cover, so the white controls stay legible.
@@ -130,9 +133,32 @@ struct PlayerView: View {
 
     private var titles: some View {
         VStack(spacing: 4) {
-            MarqueeText(text: engine.currentTrack?.title ?? "", font: .title2.bold())
-                .foregroundStyle(.white)
-                .accessibilityIdentifier("player.title")
+            // The marquee's `GeometryReader` takes all the width offered, so in a plain HStack it
+            // pushed the star off screen. It gets an explicit width that leaves room for the star
+            // on each side, keeping the title centred.
+            ZStack(alignment: .trailing) {
+                MarqueeText(text: engine.currentTrack?.title ?? "", font: .title2.bold())
+                    .foregroundStyle(.white)
+                    .frame(width: PlayerLayout.contentWidth - 2 * Theme.minTarget)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("player.title")
+                if let track = engine.currentTrack {
+                    let starred = model.isStarred(track.id)
+                    Button {
+                        Haptics.impact(.light)
+                        model.perform { try await model.toggleStar(track.id, kind: .song) }
+                    } label: {
+                        Image(systemName: starred ? "star.fill" : "star")
+                            .font(.title3)
+                            .foregroundStyle(starred ? Color.yellow : Color.white.opacity(0.8))
+                            .frame(width: Theme.minTarget, height: Theme.minTarget)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel(starred ? "Unfavorite" : "Favorite")
+                    .accessibilityIdentifier("player.star")
+                }
+            }
+            .frame(width: PlayerLayout.contentWidth)
             Text([engine.currentTrack?.artist, engine.currentTrack?.album].compactMap { $0 }.joined(separator: " · "))
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.75))
