@@ -48,12 +48,30 @@ targets:
     dependencies:
       - package: SubsonicKit
       - package: PlayerEngine
+  OwnAudioSubsonicUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: OwnAudioSubsonic
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - target: OwnAudioSubsonic
 schemes:
   OwnAudioSubsonic:
     build:
       targets:
         OwnAudioSubsonic: all
+        OwnAudioSubsonicUITests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - OwnAudioSubsonicUITests
     archive:
       config: Release
