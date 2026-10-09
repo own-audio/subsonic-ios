@@ -31,7 +31,10 @@ the trade-off chosen for simpler maintenance.
   ratings, playlist editing, `getOpenSubsonicExtensions` in the client (used from P9).
   Live-tested against a real Navidrome 0.64.2 library (519 artists); the live tests restore what
   they change and never submit a counted play.
-- [ ] **P7: Offline.** Downloads per song, album and playlist; offline mode.
+- [x] **P7: Offline.** Downloads per song, album and playlist; a Downloads screen that works
+  with no network; offline playback verified by a UI test that restarts with every server
+  unreachable, on both Navidrome and own.audio. Not yet: background downloads (URLSession
+  background sessions) and a cellular-data switch.
 - [ ] **P8: CarPlay.** Needs the CarPlay audio entitlement, which needs a paid Apple
   Developer account.
 - [ ] **P9: Extras.** Lyrics (OpenSubsonic `getLyricsBySongId`), ReplayGain, EQ.

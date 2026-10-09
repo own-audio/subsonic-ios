@@ -50,6 +50,24 @@ All notable changes to this project are documented here. The format follows
   `playCount`.
 - Failed actions (star, rate, playlist edits) show one alert and undo what the screen had
   already changed.
+- Downloads: download an album or playlist (arrow on its page) or a single song (its menu).
+  Two at a time, resumed after a restart, failures retried on request. Files are kept in
+  Application Support, out of iCloud backup, and a downloaded song plays from the phone even
+  when the server is reachable. Covers are fetched at every size the screens use, so a
+  downloaded album looks the same offline. A song shared by two downloaded albums or
+  playlists is stored once and kept until neither needs it. Removing a server removes its
+  downloads.
+- Downloads screen (Library and Settings): albums, playlists and single songs on the phone,
+  with storage used, progress, retry, swipe to remove and Remove All. It works with no
+  network and plays each song from the server it came from.
+- Adding a server explains that own.audio takes the account email and the Subsonic key from
+  the web app's settings, not the account password.
+- Offline, a cover falls back to any size of it already cached rather than a placeholder.
+- `scripts/test-servers.sh`: the live client tests and both UI tests against every server
+  listed in the gitignored `test-servers.local.env` (a Navidrome and an own.audio server,
+  whose Subsonic key it fetches fresh, as a demo server issues a new one daily).
+- UI test: download an album, restart with every server unreachable, play it from Downloads.
+  `-simulateOffline` (debug builds only) points every server at an address nothing answers.
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
@@ -59,6 +77,8 @@ All notable changes to this project are documented here. The format follows
   `AVAudioEngine` playing fixture audio.
 
 ### Fixed
+
+- "1 songs" and "1 albums" now read "1 song" and "1 album".
 
 - `PlayerEngine`: a track chained gaplessly onto the previous one (the normal case within an
   album) never reported `onPlaybackStarted`, so it could not be scrobbled as now playing.

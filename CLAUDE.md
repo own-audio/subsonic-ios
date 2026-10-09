@@ -27,6 +27,12 @@ UI smoke test (same variables, prefixed `TEST_RUNNER_`, plus optional
 -default-test-execution-time-allowance 150`. Without the allowance a stuck query can hang for
 ever.
 
+Both servers at once: put their credentials in `test-servers.local.env` (gitignored; the
+variables are listed at the top of `scripts/test-servers.sh`) and run
+`scripts/test-servers.sh [navidrome|ownaudio] [--live-only]`. own.audio's Subsonic login is
+the account email plus the per-user Subsonic key, not the account password; the script fetches
+the key.
+
 A throwaway Navidrome for both: `docker run -d -p 4533:4533 -v <music>:/music:ro -v <data>:/data
 deluan/navidrome`, then `POST /auth/createAdmin` with a username and password, then
 `/rest/startScan.view`. Tagged test tones made with ffmpeg are enough.
