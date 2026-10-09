@@ -84,6 +84,12 @@ All notable changes to this project are documented here. The format follows
 - UI test: ReplayGain shown, synced lyrics loaded and following, equalizer preset applied
   (runs where an album with lyrics and ReplayGain tags exists; `NAVIDROME_LYRICS_ALBUM` in
   `test-servers.local.env`).
+- CarPlay: Recently Played, Recently Added, Downloads (from the download index, so it works
+  with no signal), Playlists, Artists and Favorites, with covers; a tap plays and opens the
+  system Now Playing screen. Same player as the phone. Built and compiled; not yet seen on a
+  CarPlay screen (see Known issues).
+- The app model is one shared instance and loads once, whether the phone UI or CarPlay starts
+  the app.
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
@@ -100,6 +106,10 @@ All notable changes to this project are documented here. The format follows
   album) never reported `onPlaybackStarted`, so it could not be scrobbled as now playing.
 
 ### Known issues
+
+- CarPlay hasn't been checked on a screen yet: it needs the simulator's CarPlay window, opened
+  by hand. On a real car it also needs Apple's CarPlay audio entitlement, which needs a paid
+  developer account; the entitlement isn't in the project yet.
 
 - Seeking inside a track that is still streaming waits for the full download.
 - Streamed FLAC drops the last ~28 ms of a track.

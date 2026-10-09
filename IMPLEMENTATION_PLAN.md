@@ -35,8 +35,11 @@ the trade-off chosen for simpler maintenance.
   with no network; offline playback verified by a UI test that restarts with every server
   unreachable, on both Navidrome and own.audio. Not yet: background downloads (URLSession
   background sessions) and a cellular-data switch.
-- [ ] **P8: CarPlay.** Needs the CarPlay audio entitlement, which needs a paid Apple
-  Developer account.
+- [~] **P8: CarPlay.** Scene and templates built (Recently Played, Recently Added, Downloads,
+  Playlists, Artists, Favorites → system Now Playing). Still to do: check it in the
+  simulator's CarPlay window (Simulator → I/O → External Displays → CarPlay) by hand, then the
+  CarPlay audio entitlement (`com.apple.developer.carplay-audio`), which needs a paid Apple
+  Developer account, for a real car.
 - [x] **P9: Extras.** Lyrics (OpenSubsonic `getLyricsBySongId`, classic `getLyrics`
   fallback), ReplayGain (track/album/off, peak-protected, per node), EQ screen. The two real
   test servers carry neither lyrics nor ReplayGain tags, so these were verified against a
