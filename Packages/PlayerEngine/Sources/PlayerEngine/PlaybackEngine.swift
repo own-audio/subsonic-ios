@@ -1053,6 +1053,9 @@ public final class PlaybackEngine {
             adoptDurationFromBoundary(boundaries[0])
             loadArtwork(track: next)
             pushNowPlayingInfo()
+            // The other paths start a track through `beginPlaybackAfterLoad` or the crossfade,
+            // which report it; a chained track never passes through either.
+            openSpan(atPositionSecs: 0)
             if !settingsStore.crossfadeEnabled {
                 schedulePrefetchAndChainNext()
             }

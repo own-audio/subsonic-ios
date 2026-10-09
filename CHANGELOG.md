@@ -43,6 +43,11 @@ All notable changes to this project are documented here. The format follows
   `SUBSONIC_USER` and `SUBSONIC_PASSWORD` are set), 81 engine tests including a real
   `AVAudioEngine` playing fixture audio.
 
+### Fixed
+
+- `PlayerEngine`: a track chained gaplessly onto the previous one (the normal case within an
+  album) never reported `onPlaybackStarted`, so it could not be scrobbled as now playing.
+
 ### Known issues
 
 - Seeking inside a track that is still streaming waits for the full download.

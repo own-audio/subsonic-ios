@@ -170,6 +170,27 @@ struct PlaybackEngineStreamingTests {
         #expect(harness.engine.currentTrack == nil)
     }
 
+    /// Scrobbling hangs off these events. A track chained gaplessly onto the previous one never
+    /// goes through the load path that reports a start, and used to go unreported.
+    @Test("every track reports start and completion, including a gaplessly chained one")
+    func chainedTrackReportsItsStart() async throws {
+        let harness = try await makeHarness(suffix: "events", audioData: try fixtureData("test-tone.mp3"))
+        var started: [String] = []
+        var completed: [String] = []
+        harness.engine.onPlaybackStarted = { track, _ in started.append(track.id) }
+        harness.engine.onPlaybackStopped = { track, _, reason in
+            if reason == .completed { completed.append(track.id) }
+        }
+
+        await harness.engine.play(tracks: [makeTrack(id: "first"), makeTrack(id: "second")])
+        // Two 3 s tracks, the second chained onto the first once it has fully arrived.
+        try await waitUntil(timeout: 15) { completed.count == 2 }
+
+        #expect(started == ["first", "second"])
+        #expect(completed == ["first", "second"])
+        #expect(harness.engine.currentTrack == nil)
+    }
+
     /// Polls `condition` instead of a single fixed sleep — real network + real decode timing on
     /// a loaded CI machine is not exactly reproducible, and a flat `#expect` immediately after a
     /// single `Task.sleep` is exactly the kind of flaky test that shape produces.
