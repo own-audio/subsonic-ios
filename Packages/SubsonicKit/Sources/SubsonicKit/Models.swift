@@ -1,7 +1,7 @@
 import Foundation
 
 /// `ArtistID3`. Servers send many more fields than these; only what the app shows is decoded.
-public struct Artist: Decodable, Identifiable, Sendable, Hashable {
+public struct Artist: Codable, Identifiable, Sendable, Hashable {
     public let id: String
     public let name: String
     public let albumCount: Int
@@ -33,7 +33,7 @@ public struct Artist: Decodable, Identifiable, Sendable, Hashable {
 }
 
 /// `AlbumID3`.
-public struct Album: Decodable, Identifiable, Sendable, Hashable {
+public struct Album: Codable, Identifiable, Sendable, Hashable {
     public let id: String
     public let name: String
     public let artist: String?
@@ -68,7 +68,7 @@ public struct Album: Decodable, Identifiable, Sendable, Hashable {
 
 /// `Child`, as used for songs. Numbers that aren't set are left out of the JSON rather than
 /// sent as null, hence the optionals.
-public struct Song: Decodable, Identifiable, Sendable, Hashable {
+public struct Song: Codable, Identifiable, Sendable, Hashable {
     public let id: String
     public let title: String
     public let album: String?
@@ -113,7 +113,7 @@ public struct Song: Decodable, Identifiable, Sendable, Hashable {
     }
 }
 
-public struct Playlist: Decodable, Identifiable, Sendable, Hashable {
+public struct Playlist: Codable, Identifiable, Sendable, Hashable {
     public let id: String
     public let name: String
     public let comment: String?

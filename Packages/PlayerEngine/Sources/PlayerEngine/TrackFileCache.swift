@@ -116,7 +116,7 @@ public actor TrackFileCache {
         return destination
     }
 
-    static func fileExtension(prefix: Data) -> String? {
+    public static func fileExtension(prefix: Data) -> String? {
         let bytes = Array(prefix.prefix(12))
         func starts(_ text: String, at offset: Int = 0) -> Bool {
             let magic = Array(text.utf8)
@@ -131,7 +131,7 @@ public actor TrackFileCache {
         return nil
     }
 
-    static func fileExtension(mimeType: String?) -> String? {
+    public static func fileExtension(mimeType: String?) -> String? {
         switch mimeType?.lowercased() {
         case "audio/mpeg", "audio/mp3": "mp3"
         case "audio/flac", "audio/x-flac": "flac"
