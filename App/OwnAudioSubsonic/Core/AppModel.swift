@@ -129,6 +129,7 @@ final class AppModel {
             downloads.removeAll()
         }
         servers = await store.loadAll()
+        await addServerFromLaunchArguments()
         await rebuildClients()
         let saved = UserDefaults.standard.string(forKey: Self.activeServerKey).flatMap(UUID.init)
         activeServerId = servers.contains { $0.id == saved } ? saved : servers.first?.id
@@ -195,6 +196,33 @@ final class AppModel {
                 containerId: containerId.map { "\(serverId.uuidString)|\($0)" }
             )
         }
+    }
+
+    /// Debug builds only: `-debugServerHost <url> -debugServerUser <name> -debugServerPassword <secret>`
+    /// adds that server at launch if it isn't there yet, so a simulator can be handed to someone
+    /// already connected.
+    private func addServerFromLaunchArguments() async {
+        #if DEBUG
+        let defaults = UserDefaults.standard
+        guard let address = defaults.string(forKey: "debugServerHost"),
+              let username = defaults.string(forKey: "debugServerUser"),
+              let password = defaults.string(forKey: "debugServerPassword"),
+              let host = SubsonicClient.normalizeHost(address)
+        else { return }
+        if let existing = servers.first(where: { $0.credentials.host == host && $0.credentials.username == username }) {
+            // The demo server issues a new key each day; keep the saved one current.
+            guard existing.credentials.password != password else { return }
+            try? await store.remove(id: existing.id)
+            servers.removeAll { $0.id == existing.id }
+        }
+        let record = ServerRecord(
+            displayName: defaults.string(forKey: "debugServerName") ?? host.host ?? address,
+            credentials: ServerCredentials(host: host, username: username, password: password)
+        )
+        try? await store.add(record)
+        servers.append(record)
+        UserDefaults.standard.set(record.id.uuidString, forKey: Self.activeServerKey)
+        #endif
     }
 
     // MARK: - Scrobbling

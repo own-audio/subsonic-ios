@@ -106,6 +106,9 @@ All notable changes to this project are documented here. The format follows
 - App Store listing in English and Czech (`AppStore/`), and `scripts/app-store-screenshots.sh`,
   which takes the screenshots on the required iPhone 6.9" and iPad 13" sizes in both languages
   from a server whose music may be shown, with a clean status bar.
+- Debug builds: `-debugServerHost`, `-debugServerUser`, `-debugServerPassword` (and optional
+  `-debugServerName`) launch arguments add a server at launch, to hand someone a simulator
+  that is already connected.
 - Privacy manifest: no tracking, no data collected; UserDefaults and file attributes declared
   with their reasons.
 - A queue can mix servers: track ids carry the server they come from.
