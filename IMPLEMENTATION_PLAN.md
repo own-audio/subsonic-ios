@@ -27,8 +27,10 @@ the trade-off chosen for simpler maintenance.
 - [x] **P5: Player UI.** Mini player, full player, queue, AirPlay. Verified end to end in the
   simulator against Navidrome by `UITests/PlaybackSmokeTests.swift`. Not yet: going from the
   player to the artist or album, an iPad layout (P10).
-- [ ] **P6: Server features.** Scrobble (now playing + submission), star/unstar, ratings,
-  playlist editing, OpenSubsonic extensions via `getOpenSubsonicExtensions`.
+- [x] **P6: Server features.** Scrobble (now playing + submission, offline queue), star/unstar,
+  ratings, playlist editing, `getOpenSubsonicExtensions` in the client (used from P9).
+  Live-tested against a real Navidrome 0.64.2 library (519 artists); the live tests restore what
+  they change and never submit a counted play.
 - [ ] **P7: Offline.** Downloads per song, album and playlist; offline mode.
 - [ ] **P8: CarPlay.** Needs the CarPlay audio entitlement, which needs a paid Apple
   Developer account.

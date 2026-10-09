@@ -35,6 +35,21 @@ All notable changes to this project are documented here. The format follows
   album, scrubber, swipe the cover to skip, shuffle, repeat, crossfade, sleep timer, queue
   (played, now playing, up next) and AirPlay.
 - Settings: servers, crossfade, version, source code and license links.
+- Scrobbling: "now playing" when a track starts, and a counted play once half of it (or four
+  minutes) has actually been heard; tracks under 30 s never count. Plays that can't be
+  reported are kept and sent later with the time listening began. Can be turned off in
+  Settings. The rule lives in `SubsonicKit.ScrobbleTracker`, with 12 tests.
+- Favorites: star songs (long-press menu, player), albums and artists (toolbar); a Favorites
+  screen with starred songs, albums and artists; a star marker on starred songs.
+- Ratings: rate songs and albums 1–5 or clear the rating.
+- Playlists: create one (from Playlists, or from any song's "Add to Playlist…"), add songs or a
+  whole album, remove songs (swipe or menu), rename and delete. Edit actions appear only on
+  the listener's own playlists.
+- `SubsonicKit`: `star`, `unstar`, `setRating`, `starred` (`getStarred2`), `scrobble`,
+  `openSubsonicExtensions`; songs, albums and artists now carry `starred`, `userRating` and
+  `playCount`.
+- Failed actions (star, rate, playlist edits) show one alert and undo what the screen had
+  already changed.
 - A queue can mix servers: track ids carry the server they come from.
 - `PlayerEngine`: `Track.artworkId`, an opaque cover key for the lock screen and mini player.
 - UI smoke test: add a server, open an album, play, check the position moves, skip, pause
