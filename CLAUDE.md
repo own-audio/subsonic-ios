@@ -22,6 +22,17 @@ xcodebuild -project OwnAudioSubsonic.xcodeproj -scheme OwnAudioSubsonic \
 Live server tests: `SUBSONIC_HOST=… SUBSONIC_USER=… SUBSONIC_PASSWORD=… swift test --filter LiveServer`.
 Never commit the credentials.
 
+UI smoke test (same variables, prefixed `TEST_RUNNER_`, plus optional
+`TEST_RUNNER_SCREENSHOT_DIR`): `xcodebuild test … -test-timeouts-enabled YES
+-default-test-execution-time-allowance 150`. Without the allowance a stuck query can hang for
+ever.
+
+A throwaway Navidrome for both: `docker run -d -p 4533:4533 -v <music>:/music:ro -v <data>:/data
+deluan/navidrome`, then `POST /auth/createAdmin` with a username and password, then
+`/rest/startScan.view`. Tagged test tones made with ffmpeg are enough.
+
+Every change gets a `CHANGELOG.md` entry under `[Unreleased]`.
+
 Editor shows "no such module" on code that builds? Run
 `xcode-build-server config -project OwnAudioSubsonic.xcodeproj -scheme OwnAudioSubsonic`
 (`buildServer.json` is gitignored).

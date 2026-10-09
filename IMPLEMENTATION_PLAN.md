@@ -12,7 +12,7 @@ the trade-off chosen for simpler maintenance.
 - [x] **P0: Skeleton.** XcodeGen project, app launches on the simulator.
 - [x] **P1: SubsonicKit.** Client (token+salt auth, browse, search, playlists, stream and
   cover URLs), Keychain server store, 29 stubbed tests, 7 live-server tests (env-gated).
-  Live run against a real Navidrome still pending.
+  All 7 live tests pass against Navidrome 0.64.2 (local Docker, 2026-10-09).
 - [x] **P2: PlayerEngine.** AVAudioEngine engine: gapless, crossfade, progressive streaming
   with its own Core Audio decoder, file cache (driven by a track-id → URL resolver), EQ and
   spectrum, sleep timer, resume points, Now Playing and remote commands. `onPlaybackStarted` /
@@ -20,11 +20,13 @@ the trade-off chosen for simpler maintenance.
   `AVAudioEngine` playing fixture audio. Builds for iOS; not yet heard on a device.
   Known gaps carried over: no seeking inside a track that is still streaming (it waits for the
   full download); FLAC streaming drops the last ~28 ms of a track.
-- [ ] **P3: Servers.** Add, check, rename and remove servers; several at once; clear error
+- [x] **P3: Servers.** Add, check, rename and remove servers; several at once; clear error
   states (wrong password vs unreachable).
-- [ ] **P4: Library.** Artists, albums (newest, recent, frequent, random, starred), album and
+- [x] **P4: Library.** Artists, albums (newest, recent, frequent, random, starred), album and
   artist detail, playlists, search; cached cover art.
-- [ ] **P5: Player UI.** Mini player, full player, queue, AirPlay.
+- [x] **P5: Player UI.** Mini player, full player, queue, AirPlay. Verified end to end in the
+  simulator against Navidrome by `UITests/PlaybackSmokeTests.swift`. Not yet: going from the
+  player to the artist or album, an iPad layout (P10).
 - [ ] **P6: Server features.** Scrobble (now playing + submission), star/unstar, ratings,
   playlist editing, OpenSubsonic extensions via `getOpenSubsonicExtensions`.
 - [ ] **P7: Offline.** Downloads per song, album and playlist; offline mode.
