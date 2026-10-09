@@ -1,4 +1,4 @@
-import PlayerEngine
+import MusicEngine
 import SwiftUI
 
 /// The six-band graphic EQ. Rows of horizontal sliders rather than vertical faders: they read

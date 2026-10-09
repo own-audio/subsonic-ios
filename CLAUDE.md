@@ -51,4 +51,7 @@ Editor shows "no such module" on code that builds? Run
 
 - `App/OwnAudioSubsonic/` — the app target.
 - `Packages/SubsonicKit/` — protocol client and Keychain server store; Foundation only.
-- `Packages/PlayerEngine/` — playback engine; knows tracks by opaque id, nothing about servers.
+- `own-audio/player-engine` (product `MusicEngine`, a SwiftPM dependency from `from: 0.1.0`) —
+  playback engine, shared with jelly-ios; knows tracks by opaque id, nothing about servers.
+  To change it with the app, set `path: ../player-engine` in `project.yml` while working,
+  then tag a release there and switch back to the URL. Never commit the path form.

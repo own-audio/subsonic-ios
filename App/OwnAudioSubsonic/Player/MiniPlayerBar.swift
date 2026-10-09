@@ -1,4 +1,4 @@
-import PlayerEngine
+import MusicEngine
 import SwiftUI
 
 /// Sits above the tab bar while something is loaded: a thin progress line (with the

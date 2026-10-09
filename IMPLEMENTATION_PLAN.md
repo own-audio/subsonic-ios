@@ -5,7 +5,9 @@ A native, open-source iPhone and iPad player for Subsonic and OpenSubsonic serve
 
 Code lifted from the closed own.audio apps (the Subsonic client, the playback engine) is
 copied in and relicensed under MPL-2.0. It is not shared with them and will drift; that was
-the trade-off chosen for simpler maintenance.
+the trade-off chosen for simpler maintenance. The engine has since moved to its own public
+package, [player-engine](https://github.com/own-audio/player-engine) (2026-10-09), shared
+with own.audio for Jellyfin.
 
 ## Phases
 

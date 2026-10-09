@@ -24,19 +24,22 @@ xcodegen generate
 open OwnAudioSubsonic.xcodeproj
 ```
 
-The two Swift packages test on their own:
+The Subsonic client tests on its own:
 
 ```bash
 cd Packages/SubsonicKit && swift test
-cd Packages/PlayerEngine && swift test
 ```
+
+The player is [player-engine](https://github.com/own-audio/player-engine), a separate package
+shared with own.audio for Jellyfin; Xcode fetches it.
 
 Tests against a real server, and the UI tests, are described in [CLAUDE.md](CLAUDE.md).
 
 ## Layout
 
 - `Packages/SubsonicKit` — the Subsonic client, server store, scrobble rules
-- `Packages/PlayerEngine` — the player; knows nothing about servers
+- [player-engine](https://github.com/own-audio/player-engine) (`MusicEngine`) — the player;
+  knows nothing about servers
 - `App/` — the app
 - `UITests/` — end-to-end tests against a real server
 

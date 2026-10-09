@@ -1,5 +1,5 @@
 import Foundation
-import PlayerEngine
+import MusicEngine
 import SubsonicKit
 
 /// The engine knows tracks only by an opaque id. Ours carries the server too, so a queue can

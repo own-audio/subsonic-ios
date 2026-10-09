@@ -8,8 +8,11 @@ options:
 packages:
   SubsonicKit:
     path: Packages/SubsonicKit
+  # Shared with own.audio for Jellyfin. To work on it alongside the app, point this at a local
+  # checkout instead: `path: ../player-engine`.
   PlayerEngine:
-    path: Packages/PlayerEngine
+    url: https://github.com/own-audio/player-engine
+    from: 0.1.0
 targets:
   OwnAudioSubsonic:
     type: application
@@ -59,6 +62,7 @@ targets:
     dependencies:
       - package: SubsonicKit
       - package: PlayerEngine
+        product: MusicEngine
   OwnAudioSubsonicUITests:
     type: bundle.ui-testing
     platform: iOS

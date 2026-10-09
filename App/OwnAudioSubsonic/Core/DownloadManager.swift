@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import PlayerEngine
+import MusicEngine
 import SubsonicKit
 
 /// Songs kept on the phone for offline listening, and the albums and playlists they were

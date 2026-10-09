@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The player is now the separate [player-engine](https://github.com/own-audio/player-engine)
+  package (0.1.0, product `MusicEngine`), shared with own.audio for Jellyfin, instead of
+  `Packages/PlayerEngine`. Same code, moved with its history; nothing changes for the
+  listener.
 - Search: the field sits in the tab bar's search capsule, as in own.audio's music app, instead
   of under the title.
 - New welcome screen: the app icon, name and what it works with, one card for the server

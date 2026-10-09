@@ -1,4 +1,4 @@
-import PlayerEngine
+import MusicEngine
 import SwiftUI
 
 struct SettingsView: View {

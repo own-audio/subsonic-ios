@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import PlayerEngine
+import MusicEngine
 import SubsonicKit
 
 /// The app's single source of truth: configured servers, which one is being browsed, and the

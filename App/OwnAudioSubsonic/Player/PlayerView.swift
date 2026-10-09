@@ -1,4 +1,4 @@
-import PlayerEngine
+import MusicEngine
 import SwiftUI
 
 /// The full player: blurred-cover background, large cover, title, a format badge, scrubber,
