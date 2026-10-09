@@ -167,6 +167,50 @@ final class PlaybackSmokeTests: XCTestCase {
         app.buttons["Done"].tap()
     }
 
+    /// Walks the main screens in Czech and saves screenshots, to catch untranslated or
+    /// clipped text. Finds everything by identifier, so it doesn't depend on the language.
+    func testCzechScreens() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset", "-AppleLanguages", "(cs)", "-AppleLocale", "cs_CZ"]
+        app.launch()
+        let address = app.textFields["addServer.address"]
+        XCTAssertTrue(address.waitForExistence(timeout: 10))
+        screenshot(app, "cs-01-onboarding")
+        address.tap()
+        address.typeText(env["SUBSONIC_HOST"]!)
+        app.textFields["addServer.username"].tap()
+        app.textFields["addServer.username"].typeText(env["SUBSONIC_USER"] ?? "")
+        app.secureTextFields["addServer.password"].tap()
+        app.secureTextFields["addServer.password"].typeText(env["SUBSONIC_PASSWORD"] ?? "")
+        app.buttons["addServer.connect"].tap()
+        let albums = app.buttons["Alba"]
+        XCTAssertTrue(albums.waitForExistence(timeout: 15))
+        dismissSavePasswordPrompt(app)
+        sleep(2)
+        screenshot(app, "cs-02-library")
+
+        albums.tap()
+        let album = app.scrollViews.buttons.firstMatch
+        XCTAssertTrue(album.waitForExistence(timeout: 10))
+        album.tap()
+        let play = app.buttons["detail.play"]
+        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled })
+        screenshot(app, "cs-03-album")
+        play.tap()
+        let miniPlayer = app.buttons["miniPlayer"]
+        XCTAssertTrue(miniPlayer.waitForExistence(timeout: 20))
+        miniPlayer.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["player.scrubber"].firstMatch.waitForExistence(timeout: 10))
+        sleep(2)
+        screenshot(app, "cs-04-player")
+        app.buttons["player.close"].tap()
+
+        app.buttons["Nastavení"].firstMatch.tap()
+        sleep(1)
+        screenshot(app, "cs-05-settings")
+    }
+
     private func addServer(_ app: XCUIApplication, screenshots: Bool = true) {
         let address = app.textFields["addServer.address"]
         XCTAssertTrue(address.waitForExistence(timeout: 10))
