@@ -67,3 +67,6 @@ fastlane/test_output
 buildServer.json
 .DS_Store
 .swiftpm/
+
+# Test server credentials, see scripts/test-servers.sh
+*.local.env

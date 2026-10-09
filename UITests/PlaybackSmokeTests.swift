@@ -25,32 +25,8 @@ final class PlaybackSmokeTests: XCTestCase {
         app.launchArguments = ["-uiTestReset"]
         app.launch()
 
-        let address = app.textFields["addServer.address"]
-        XCTAssertTrue(address.waitForExistence(timeout: 10))
-        screenshot(app, "01-onboarding")
-        address.tap()
-        address.typeText(env["SUBSONIC_HOST"]!)
-        app.textFields["addServer.username"].tap()
-        app.textFields["addServer.username"].typeText(env["SUBSONIC_USER"] ?? "")
-        app.secureTextFields["addServer.password"].tap()
-        app.secureTextFields["addServer.password"].typeText(env["SUBSONIC_PASSWORD"] ?? "")
-        app.buttons["addServer.connect"].tap()
-
-        let albumsLink = app.buttons["Albums"]
-        XCTAssertTrue(albumsLink.waitForExistence(timeout: 15), "the library should open after connecting")
-        dismissSavePasswordPrompt(app)
-        sleep(2)
-        screenshot(app, "02-library")
-        albumsLink.tap()
-
-        // Without a name, the first album in the grid; it needs two or more tracks.
-        let album = env["SUBSONIC_ALBUM"].map {
-            app.buttons.containing(NSPredicate(format: "label CONTAINS %@", $0)).firstMatch
-        } ?? app.scrollViews.buttons.firstMatch
-        XCTAssertTrue(album.waitForExistence(timeout: 10))
-        sleep(1)
-        screenshot(app, "03-albums")
-        album.tap()
+        addServer(app)
+        openAlbum(app, named: env["SUBSONIC_ALBUM"])
 
         let play = app.buttons["detail.play"]
         XCTAssertTrue(play.waitForExistence(timeout: 10))
@@ -93,6 +69,87 @@ final class PlaybackSmokeTests: XCTestCase {
         app.buttons["player.playPause"].tap()
         let playPause = app.buttons["player.playPause"]
         XCTAssertTrue(waitUntil(timeout: 5) { playPause.exists && playPause.label == "Play" }, "pause should pause")
+    }
+
+    /// Download an album, then start the app with every server unreachable and play it from
+    /// Downloads. `TEST_RUNNER_SUBSONIC_DOWNLOAD_ALBUM` picks a small album; without it, the
+    /// first one.
+    func testDownloadAlbumAndPlayOffline() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
+        app.launch()
+        addServer(app, screenshots: false)
+        openAlbum(app, named: env["SUBSONIC_DOWNLOAD_ALBUM"], screenshots: false)
+
+        let download = app.buttons["download.start"]
+        XCTAssertTrue(download.waitForExistence(timeout: 10))
+        XCTAssertTrue(waitUntil(timeout: 15) { download.isEnabled }, "Download should enable once the songs load")
+        download.tap()
+        let done = app.buttons["download.done"]
+        XCTAssertTrue(done.waitForExistence(timeout: 300), "the album should finish downloading")
+        screenshot(app, "10-downloaded")
+
+        app.terminate()
+        app.launchArguments = ["-simulateOffline"]
+        app.launch()
+
+        let downloadsLink = app.buttons["Downloads"]
+        XCTAssertTrue(downloadsLink.waitForExistence(timeout: 15))
+        sleep(2)
+        screenshot(app, "11-offline-library")
+        downloadsLink.tap()
+
+        let collection = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'downloads.album.'")).firstMatch
+        XCTAssertTrue(collection.waitForExistence(timeout: 10), "the downloaded album should be listed offline")
+        screenshot(app, "12-downloads")
+        collection.tap()
+
+        let play = app.buttons["detail.play"]
+        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        play.tap()
+
+        let miniPlayPause = app.buttons["miniPlayer.playPause"]
+        XCTAssertTrue(
+            waitUntil(timeout: 15) { miniPlayPause.exists && miniPlayPause.label == "Pause" },
+            "a downloaded album should play with no server"
+        )
+        app.buttons["miniPlayer"].tap()
+        let scrubber = app.descendants(matching: .any)["player.scrubber"].firstMatch
+        XCTAssertTrue(scrubber.waitForExistence(timeout: 10))
+        let firstPosition = scrubber.value as? String ?? ""
+        sleep(3)
+        XCTAssertNotEqual(scrubber.value as? String ?? "", firstPosition, "offline playback should advance")
+        screenshot(app, "13-offline-player")
+    }
+
+    private func addServer(_ app: XCUIApplication, screenshots: Bool = true) {
+        let address = app.textFields["addServer.address"]
+        XCTAssertTrue(address.waitForExistence(timeout: 10))
+        if screenshots { screenshot(app, "01-onboarding") }
+        address.tap()
+        address.typeText(env["SUBSONIC_HOST"]!)
+        app.textFields["addServer.username"].tap()
+        app.textFields["addServer.username"].typeText(env["SUBSONIC_USER"] ?? "")
+        app.secureTextFields["addServer.password"].tap()
+        app.secureTextFields["addServer.password"].typeText(env["SUBSONIC_PASSWORD"] ?? "")
+        app.buttons["addServer.connect"].tap()
+
+        XCTAssertTrue(app.buttons["Albums"].waitForExistence(timeout: 15), "the library should open after connecting")
+        dismissSavePasswordPrompt(app)
+        sleep(2)
+        if screenshots { screenshot(app, "02-library") }
+    }
+
+    /// Without a name, the first album in the grid.
+    private func openAlbum(_ app: XCUIApplication, named name: String?, screenshots: Bool = true) {
+        app.buttons["Albums"].tap()
+        let album = name.map {
+            app.buttons.containing(NSPredicate(format: "label CONTAINS %@", $0)).firstMatch
+        } ?? app.scrollViews.buttons.firstMatch
+        XCTAssertTrue(album.waitForExistence(timeout: 10))
+        sleep(1)
+        if screenshots { screenshot(app, "03-albums") }
+        album.tap()
     }
 
     /// iOS offers to save the password after a sign-in form. It's the system's sheet, in the
