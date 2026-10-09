@@ -79,7 +79,7 @@ final class PlaybackSmokeTests: XCTestCase {
         app.launchArguments = ["-uiTestReset"]
         app.launch()
         addServer(app, screenshots: false)
-        openAlbum(app, named: env["SUBSONIC_DOWNLOAD_ALBUM"], screenshots: false)
+        openAlbum(app, named: env["SUBSONIC_DOWNLOAD_ALBUM"].flatMap { $0.isEmpty ? nil : $0 }, screenshots: false)
 
         let download = app.buttons["download.start"]
         XCTAssertTrue(download.waitForExistence(timeout: 10))
@@ -120,6 +120,51 @@ final class PlaybackSmokeTests: XCTestCase {
         sleep(3)
         XCTAssertNotEqual(scrubber.value as? String ?? "", firstPosition, "offline playback should advance")
         screenshot(app, "13-offline-player")
+    }
+
+    /// Needs an album whose first song has ReplayGain tags (track gain -6.5 dB) and synced
+    /// lyrics: `TEST_RUNNER_SUBSONIC_LYRICS_ALBUM`. Skipped without it; the real servers used for
+    /// testing have neither, so this runs against a local Navidrome with a generated album.
+    func testLyricsReplayGainAndEqualizer() throws {
+        guard let albumName = env["SUBSONIC_LYRICS_ALBUM"], !albumName.isEmpty else {
+            throw XCTSkip("SUBSONIC_LYRICS_ALBUM is not set")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
+        app.launch()
+        addServer(app, screenshots: false)
+        openAlbum(app, named: albumName, screenshots: false)
+
+        let play = app.buttons["detail.play"]
+        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        XCTAssertTrue(waitUntil(timeout: 10) { play.isEnabled })
+        play.tap()
+        let miniPlayer = app.buttons["miniPlayer"]
+        XCTAssertTrue(miniPlayer.waitForExistence(timeout: 15))
+        miniPlayer.tap()
+
+        let gain = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '-6.5 dB'")).firstMatch
+        XCTAssertTrue(gain.waitForExistence(timeout: 15), "the player should show the ReplayGain it applies")
+        screenshot(app, "20-replaygain")
+
+        app.buttons["Lyrics"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["lyrics.synced"].waitForExistence(timeout: 10), "synced lyrics should load")
+        XCTAssertTrue(app.staticTexts["The first line arrives"].waitForExistence(timeout: 5))
+        sleep(6)
+        screenshot(app, "21-lyrics")
+        app.buttons["Done"].tap()
+
+        app.buttons["EQ"].tap()
+        let toggle = app.switches["equalizer.enabled"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        if (toggle.value as? String) != "1" { toggle.switches.firstMatch.tap() }
+        app.buttons["equalizer.preset.Bass Boost"].tap()
+        sleep(1)
+        screenshot(app, "22-equalizer")
+        // Back to flat and off, so other runs start clean.
+        app.buttons["Reset"].tap()
+        toggle.switches.firstMatch.tap()
+        app.buttons["Done"].tap()
     }
 
     private func addServer(_ app: XCUIApplication, screenshots: Bool = true) {
