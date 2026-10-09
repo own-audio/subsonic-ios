@@ -6,7 +6,7 @@ import XCTest
 ///
 /// ```
 /// TEST_RUNNER_SUBSONIC_HOST=localhost:4533 TEST_RUNNER_SUBSONIC_USER=… TEST_RUNNER_SUBSONIC_PASSWORD=… \
-/// TEST_RUNNER_SUBSONIC_ALBUM="First Album" xcodebuild test …
+/// xcodebuild test …   # optionally TEST_RUNNER_SUBSONIC_ALBUM="<name>"
 /// ```
 ///
 /// `TEST_RUNNER_SCREENSHOT_DIR` saves a screenshot of each step there as well as in the result.
@@ -43,8 +43,10 @@ final class PlaybackSmokeTests: XCTestCase {
         screenshot(app, "02-library")
         albumsLink.tap()
 
-        let albumName = env["SUBSONIC_ALBUM"] ?? "First Album"
-        let album = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", albumName)).firstMatch
+        // Without a name, the first album in the grid; it needs two or more tracks.
+        let album = env["SUBSONIC_ALBUM"].map {
+            app.buttons.containing(NSPredicate(format: "label CONTAINS %@", $0)).firstMatch
+        } ?? app.scrollViews.buttons.firstMatch
         XCTAssertTrue(album.waitForExistence(timeout: 10))
         sleep(1)
         screenshot(app, "03-albums")
@@ -58,7 +60,9 @@ final class PlaybackSmokeTests: XCTestCase {
 
         let miniPlayer = app.buttons["miniPlayer"]
         XCTAssertTrue(miniPlayer.waitForExistence(timeout: 15), "the mini player should appear once playback starts")
-        XCTAssertTrue(waitUntil(timeout: 15) { app.buttons["miniPlayer.playPause"].label == "Pause" }, "playback should start")
+        // A spinner stands where the button goes until the first audio arrives.
+        let miniPlayPause = app.buttons["miniPlayer.playPause"]
+        XCTAssertTrue(waitUntil(timeout: 30) { miniPlayPause.exists && miniPlayPause.label == "Pause" }, "playback should start")
         screenshot(app, "05-mini-player")
         miniPlayer.tap()
 
@@ -72,12 +76,23 @@ final class PlaybackSmokeTests: XCTestCase {
         screenshot(app, "06-player")
 
         app.buttons["player.next"].tap()
-        XCTAssertTrue(waitUntil(timeout: 15) { title.label != firstTitle }, "next should change the track")
+        XCTAssertTrue(waitUntil(timeout: 30) { title.exists && title.label != firstTitle }, "next should change the track")
         sleep(1)
         screenshot(app, "07-next-track")
 
+        // Star the playing song and put it back, so the library ends as it began.
+        let star = app.buttons["player.star"]
+        XCTAssertTrue(star.waitForExistence(timeout: 5))
+        let before = star.label
+        star.tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { star.label != before }, "the star should flip")
+        screenshot(app, "08-starred")
+        star.tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { star.label == before }, "the star should flip back")
+
         app.buttons["player.playPause"].tap()
-        XCTAssertTrue(waitUntil(timeout: 5) { app.buttons["player.playPause"].label == "Play" }, "pause should pause")
+        let playPause = app.buttons["player.playPause"]
+        XCTAssertTrue(waitUntil(timeout: 5) { playPause.exists && playPause.label == "Play" }, "pause should pause")
     }
 
     /// iOS offers to save the password after a sign-in form. It's the system's sheet, in the
