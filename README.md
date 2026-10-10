@@ -1,5 +1,7 @@
 # own.audio for Subsonic
 
+> **Moved.** This project is now part of [own.audio Music](https://github.com/own-audio/music-ios), one open-source player for own.audio, Subsonic/Navidrome and Jellyfin servers. Its history is kept there; this repository is archived.
+
 A native iPhone and iPad player for Subsonic and OpenSubsonic servers: Navidrome, Gonic,
 Airsonic, LMS, Ampache, own.audio and others. Swift and SwiftUI, no web views.
 
